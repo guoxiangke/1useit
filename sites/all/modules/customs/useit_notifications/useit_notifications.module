@@ -2,7 +2,7 @@
 /**
  * Implements hook_cron().
  */
-function 1useit_notifications_cron() {
+function useit_notifications_cron() {
   /*
    *  // Short-running operation example, not using a queue:
    *  // Delete all expired records since the last cron run.
@@ -25,14 +25,14 @@ function 1useit_notifications_cron() {
    */
    /* Your code here */
    //send email to class.
-   1useit_notifications_class();
+   useit_notifications_class();
 }
 
 /**
  * Post test message
  * @see messaging_admin_test_post_form_submit
  */
-function 1useit_notifications_class() {
+function useit_notifications_class() {
   $notification_class = views_get_view_result('notification_class');
   foreach ($notification_class as $key => $value) {
     $node = $value->_field_data['nid']['entity'];
@@ -41,7 +41,7 @@ function 1useit_notifications_class() {
       // param begin
       $subject = '1userit上课提醒';
       $body['header'] = 'Hello admin,';
-      $body['content'] = '您在1userit上预约的英语口语课程即将在'.$node->field_date[LANGUAGE_NONE][0]['value'].'开始，'.$node->field_date[LANGUAGE_NONE][0]['value2'].'结束。请届时登录1userit参加网上课堂。'.l($node->title,'node/'.$node->nid);
+      $body['content'] = '您在1userit上预约的英语口语课程即将在'.$node->field_date[LANGUAGE_NONE][0]['value'].'开始，'.$node->field_date[LANGUAGE_NONE][0]['value2'].'结束。请届时登录1userit参加网上课堂。';//.l($node->title,'node/'.$node->nid);
       $body['footer'] = 'This is a test message from 1UseIt. 系统发送，请勿直接回复，如有疑问，请service@1userit.com!';
       $address = $node->field_student[LANGUAGE_NONE][0]['uid'];
       // if($address ==3) continue;
