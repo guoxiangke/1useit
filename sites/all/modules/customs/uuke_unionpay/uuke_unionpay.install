@@ -1,0 +1,7 @@
+<?php
+/**
+ * Implements hook_uninstall().
+ */
+function uuke_unionpay_uninstall() {
+	db_query("DELETE FROM {variable} WHERE name LIKE 'uuke_unionpay_%%'");
+}

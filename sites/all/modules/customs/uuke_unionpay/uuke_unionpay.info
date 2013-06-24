@@ -1,0 +1,5 @@
+name =  UUKE unionpay
+description = UUKE unionpay Module
+package = dev
+core = 7.x
+dependencies[] = uuke_alipay

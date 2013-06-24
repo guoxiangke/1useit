@@ -1,0 +1,1220 @@
+<?php
+/**
+ * Implements hook_install().
+ */
+function uuke_alipay_install() {
+  // import Alipay order node_type begin
+  $data = array(
+    'bundles' => array(
+      'uuke_alipay_order' => (object) array(
+        'type' => 'uuke_alipay_order',
+        'name' => 'Alipay Order',
+        'base' => 'node_content',
+        'module' => 'node',
+        'description' => '',
+        'help' => '',
+        'has_title' => '1',
+        'title_label' => '商家订单号',
+        'custom' => '1',
+        'modified' => '1',
+        'locked' => '0',
+        'disabled' => '0',
+        'orig_type' => 'uuke_alipay_order',
+        'disabled_changed' => FALSE,
+        'bc_entity_type' => 'node',
+      ),
+    ),
+    'fields' => array(
+      'body' => array(
+        'entity_types' => array(
+          0 => 'node',
+        ),
+        'translatable' => '0',
+        'settings' => array(),
+        'storage' => array(
+          'type' => 'field_sql_storage',
+          'settings' => array(),
+          'module' => 'field_sql_storage',
+          'active' => '1',
+          'details' => array(
+            'sql' => array(
+              'FIELD_LOAD_CURRENT' => array(
+                'field_data_body' => array(
+                  'value' => 'body_value',
+                  'summary' => 'body_summary',
+                  'format' => 'body_format',
+                ),
+              ),
+              'FIELD_LOAD_REVISION' => array(
+                'field_revision_body' => array(
+                  'value' => 'body_value',
+                  'summary' => 'body_summary',
+                  'format' => 'body_format',
+                ),
+              ),
+            ),
+          ),
+        ),
+        'foreign keys' => array(
+          'format' => array(
+            'table' => 'filter_format',
+            'columns' => array(
+              'format' => 'format',
+            ),
+          ),
+        ),
+        'indexes' => array(
+          'format' => array(
+            0 => 'format',
+          ),
+        ),
+        'field_name' => 'body',
+        'type' => 'text_with_summary',
+        'module' => 'text',
+        'active' => '1',
+        'locked' => '0',
+        'cardinality' => '1',
+        'deleted' => '0',
+        'columns' => array(
+          'value' => array(
+            'type' => 'text',
+            'size' => 'big',
+            'not null' => FALSE,
+          ),
+          'summary' => array(
+            'type' => 'text',
+            'size' => 'big',
+            'not null' => FALSE,
+          ),
+          'format' => array(
+            'type' => 'varchar',
+            'length' => 255,
+            'not null' => FALSE,
+          ),
+        ),
+        'bundles' => array(
+          'node' => array(
+            0 => 'page',
+            1 => 'article',
+            2 => 'app',
+            3 => 'uuke_alipay_order',
+          ),
+        ),
+      ),
+      'field_uuke_alipay_order_uid' => array(
+        'translatable' => '0',
+        'entity_types' => array(),
+        'settings' => array(
+          'target_type' => 'user',
+          'handler' => 'base',
+          'handler_settings' => array(
+            'target_bundles' => array(),
+            'sort' => array(
+              'type' => 'none',
+            ),
+            'behaviors' => array(
+              'views-select-list' => array(
+                'status' => 0,
+              ),
+            ),
+          ),
+        ),
+        'storage' => array(
+          'type' => 'field_sql_storage',
+          'settings' => array(),
+          'module' => 'field_sql_storage',
+          'active' => '1',
+          'details' => array(
+            'sql' => array(
+              'FIELD_LOAD_CURRENT' => array(
+                'field_data_field_uuke_alipay_order_uid' => array(
+                  'target_id' => 'field_uuke_alipay_order_uid_target_id',
+                ),
+              ),
+              'FIELD_LOAD_REVISION' => array(
+                'field_revision_field_uuke_alipay_order_uid' => array(
+                  'target_id' => 'field_uuke_alipay_order_uid_target_id',
+                ),
+              ),
+            ),
+          ),
+        ),
+        'foreign keys' => array(),
+        'indexes' => array(
+          'target_id' => array(
+            0 => 'target_id',
+          ),
+        ),
+        'field_name' => 'field_uuke_alipay_order_uid',
+        'type' => 'entityreference',
+        'module' => 'entityreference',
+        'active' => '1',
+        'locked' => '0',
+        'cardinality' => '1',
+        'deleted' => '0',
+        'columns' => array(
+          'target_id' => array(
+            'description' => 'The id of the target entity.',
+            'type' => 'int',
+            'unsigned' => TRUE,
+            'not null' => TRUE,
+          ),
+        ),
+        'bundles' => array(
+          'node' => array(
+            0 => 'uuke_alipay_order',
+          ),
+        ),
+      ),
+      'field_uuke_alipay_product_nid' => array(
+        'translatable' => '0',
+        'entity_types' => array(),
+        'settings' => array(
+          'target_type' => 'node',
+          'handler' => 'base',
+          'handler_settings' => array(
+            'target_bundles' => array(
+              'app' => 'app',
+            ),
+            'sort' => array(
+              'type' => 'none',
+            ),
+            'behaviors' => array(
+              'views-select-list' => array(
+                'status' => 0,
+              ),
+            ),
+          ),
+        ),
+        'storage' => array(
+          'type' => 'field_sql_storage',
+          'settings' => array(),
+          'module' => 'field_sql_storage',
+          'active' => '1',
+          'details' => array(
+            'sql' => array(
+              'FIELD_LOAD_CURRENT' => array(
+                'field_data_field_uuke_alipay_product_nid' => array(
+                  'target_id' => 'field_uuke_alipay_product_nid_target_id',
+                ),
+              ),
+              'FIELD_LOAD_REVISION' => array(
+                'field_revision_field_uuke_alipay_product_nid' => array(
+                  'target_id' => 'field_uuke_alipay_product_nid_target_id',
+                ),
+              ),
+            ),
+          ),
+        ),
+        'foreign keys' => array(),
+        'indexes' => array(
+          'target_id' => array(
+            0 => 'target_id',
+          ),
+        ),
+        'field_name' => 'field_uuke_alipay_product_nid',
+        'type' => 'entityreference',
+        'module' => 'entityreference',
+        'active' => '1',
+        'locked' => '0',
+        'cardinality' => '1',
+        'deleted' => '0',
+        'columns' => array(
+          'target_id' => array(
+            'description' => 'The id of the target entity.',
+            'type' => 'int',
+            'unsigned' => TRUE,
+            'not null' => TRUE,
+          ),
+        ),
+        'bundles' => array(
+          'node' => array(
+            0 => 'uuke_alipay_order',
+          ),
+        ),
+      ),
+      'field_uuke_alipay_product_price' => array(
+        'translatable' => '0',
+        'entity_types' => array(),
+        'settings' => array(
+          'precision' => '10',
+          'scale' => '2',
+          'decimal_separator' => '.',
+        ),
+        'storage' => array(
+          'type' => 'field_sql_storage',
+          'settings' => array(),
+          'module' => 'field_sql_storage',
+          'active' => '1',
+          'details' => array(
+            'sql' => array(
+              'FIELD_LOAD_CURRENT' => array(
+                'field_data_field_uuke_alipay_product_price' => array(
+                  'value' => 'field_uuke_alipay_product_price_value',
+                ),
+              ),
+              'FIELD_LOAD_REVISION' => array(
+                'field_revision_field_uuke_alipay_product_price' => array(
+                  'value' => 'field_uuke_alipay_product_price_value',
+                ),
+              ),
+            ),
+          ),
+        ),
+        'foreign keys' => array(),
+        'indexes' => array(),
+        'field_name' => 'field_uuke_alipay_product_price',
+        'type' => 'number_decimal',
+        'module' => 'number',
+        'active' => '1',
+        'locked' => '0',
+        'cardinality' => '1',
+        'deleted' => '0',
+        'columns' => array(
+          'value' => array(
+            'type' => 'numeric',
+            'precision' => '10',
+            'scale' => '2',
+            'not null' => FALSE,
+          ),
+        ),
+        'bundles' => array(
+          'node' => array(
+            0 => 'uuke_alipay_order',
+          ),
+        ),
+      ),
+      'field_uuke_alipay_product_title' => array(
+        'translatable' => '0',
+        'entity_types' => array(),
+        'settings' => array(
+          'max_length' => '255',
+        ),
+        'storage' => array(
+          'type' => 'field_sql_storage',
+          'settings' => array(),
+          'module' => 'field_sql_storage',
+          'active' => '1',
+          'details' => array(
+            'sql' => array(
+              'FIELD_LOAD_CURRENT' => array(
+                'field_data_field_uuke_alipay_product_title' => array(
+                  'value' => 'field_uuke_alipay_product_title_value',
+                  'format' => 'field_uuke_alipay_product_title_format',
+                ),
+              ),
+              'FIELD_LOAD_REVISION' => array(
+                'field_revision_field_uuke_alipay_product_title' => array(
+                  'value' => 'field_uuke_alipay_product_title_value',
+                  'format' => 'field_uuke_alipay_product_title_format',
+                ),
+              ),
+            ),
+          ),
+        ),
+        'foreign keys' => array(
+          'format' => array(
+            'table' => 'filter_format',
+            'columns' => array(
+              'format' => 'format',
+            ),
+          ),
+        ),
+        'indexes' => array(
+          'format' => array(
+            0 => 'format',
+          ),
+        ),
+        'field_name' => 'field_uuke_alipay_product_title',
+        'type' => 'text',
+        'module' => 'text',
+        'active' => '1',
+        'locked' => '0',
+        'cardinality' => '1',
+        'deleted' => '0',
+        'columns' => array(
+          'value' => array(
+            'type' => 'varchar',
+            'length' => '255',
+            'not null' => FALSE,
+          ),
+          'format' => array(
+            'type' => 'varchar',
+            'length' => 255,
+            'not null' => FALSE,
+          ),
+        ),
+        'bundles' => array(
+          'node' => array(
+            0 => 'uuke_alipay_order',
+          ),
+        ),
+      ),
+      'field_uuke_alipay_product_type' => array(
+        'translatable' => '0',
+        'entity_types' => array(),
+        'settings' => array(
+          'max_length' => '255',
+        ),
+        'storage' => array(
+          'type' => 'field_sql_storage',
+          'settings' => array(),
+          'module' => 'field_sql_storage',
+          'active' => '1',
+          'details' => array(
+            'sql' => array(
+              'FIELD_LOAD_CURRENT' => array(
+                'field_data_field_uuke_alipay_product_type' => array(
+                  'value' => 'field_uuke_alipay_product_type_value',
+                  'format' => 'field_uuke_alipay_product_type_format',
+                ),
+              ),
+              'FIELD_LOAD_REVISION' => array(
+                'field_revision_field_uuke_alipay_product_type' => array(
+                  'value' => 'field_uuke_alipay_product_type_value',
+                  'format' => 'field_uuke_alipay_product_type_format',
+                ),
+              ),
+            ),
+          ),
+        ),
+        'foreign keys' => array(
+          'format' => array(
+            'table' => 'filter_format',
+            'columns' => array(
+              'format' => 'format',
+            ),
+          ),
+        ),
+        'indexes' => array(
+          'format' => array(
+            0 => 'format',
+          ),
+        ),
+        'field_name' => 'field_uuke_alipay_product_type',
+        'type' => 'text',
+        'module' => 'text',
+        'active' => '1',
+        'locked' => '0',
+        'cardinality' => '1',
+        'deleted' => '0',
+        'columns' => array(
+          'value' => array(
+            'type' => 'varchar',
+            'length' => '255',
+            'not null' => FALSE,
+          ),
+          'format' => array(
+            'type' => 'varchar',
+            'length' => 255,
+            'not null' => FALSE,
+          ),
+        ),
+        'bundles' => array(
+          'node' => array(
+            0 => 'uuke_alipay_order',
+          ),
+        ),
+      ),
+      'field_uuke_alipay_quantity' => array(
+        'translatable' => '0',
+        'entity_types' => array(),
+        'settings' => array(),
+        'storage' => array(
+          'type' => 'field_sql_storage',
+          'settings' => array(),
+          'module' => 'field_sql_storage',
+          'active' => '1',
+          'details' => array(
+            'sql' => array(
+              'FIELD_LOAD_CURRENT' => array(
+                'field_data_field_uuke_alipay_quantity' => array(
+                  'value' => 'field_uuke_alipay_quantity_value',
+                ),
+              ),
+              'FIELD_LOAD_REVISION' => array(
+                'field_revision_field_uuke_alipay_quantity' => array(
+                  'value' => 'field_uuke_alipay_quantity_value',
+                ),
+              ),
+            ),
+          ),
+        ),
+        'foreign keys' => array(),
+        'indexes' => array(),
+        'field_name' => 'field_uuke_alipay_quantity',
+        'type' => 'number_integer',
+        'module' => 'number',
+        'active' => '1',
+        'locked' => '0',
+        'cardinality' => '1',
+        'deleted' => '0',
+        'columns' => array(
+          'value' => array(
+            'type' => 'int',
+            'not null' => FALSE,
+          ),
+        ),
+        'bundles' => array(
+          'node' => array(
+            0 => 'uuke_alipay_order',
+          ),
+        ),
+      ),
+      'field_uuke_alipay_return' => array(
+        'translatable' => '0',
+        'entity_types' => array(),
+        'settings' => array(),
+        'storage' => array(
+          'type' => 'field_sql_storage',
+          'settings' => array(),
+          'module' => 'field_sql_storage',
+          'active' => '1',
+          'details' => array(
+            'sql' => array(
+              'FIELD_LOAD_CURRENT' => array(
+                'field_data_field_uuke_alipay_return' => array(
+                  'value' => 'field_uuke_alipay_return_value',
+                  'format' => 'field_uuke_alipay_return_format',
+                ),
+              ),
+              'FIELD_LOAD_REVISION' => array(
+                'field_revision_field_uuke_alipay_return' => array(
+                  'value' => 'field_uuke_alipay_return_value',
+                  'format' => 'field_uuke_alipay_return_format',
+                ),
+              ),
+            ),
+          ),
+        ),
+        'foreign keys' => array(
+          'format' => array(
+            'table' => 'filter_format',
+            'columns' => array(
+              'format' => 'format',
+            ),
+          ),
+        ),
+        'indexes' => array(
+          'format' => array(
+            0 => 'format',
+          ),
+        ),
+        'field_name' => 'field_uuke_alipay_return',
+        'type' => 'text_long',
+        'module' => 'text',
+        'active' => '1',
+        'locked' => '0',
+        'cardinality' => '1',
+        'deleted' => '0',
+        'columns' => array(
+          'value' => array(
+            'type' => 'text',
+            'size' => 'big',
+            'not null' => FALSE,
+          ),
+          'format' => array(
+            'type' => 'varchar',
+            'length' => 255,
+            'not null' => FALSE,
+          ),
+        ),
+        'bundles' => array(
+          'node' => array(
+            0 => 'uuke_alipay_order',
+          ),
+        ),
+      ),
+      'field_uuke_alipay_trade_no' => array(
+        'translatable' => '0',
+        'entity_types' => array(),
+        'settings' => array(
+          'max_length' => '255',
+        ),
+        'storage' => array(
+          'type' => 'field_sql_storage',
+          'settings' => array(),
+          'module' => 'field_sql_storage',
+          'active' => '1',
+          'details' => array(
+            'sql' => array(
+              'FIELD_LOAD_CURRENT' => array(
+                'field_data_field_uuke_alipay_trade_no' => array(
+                  'value' => 'field_uuke_alipay_trade_no_value',
+                  'format' => 'field_uuke_alipay_trade_no_format',
+                ),
+              ),
+              'FIELD_LOAD_REVISION' => array(
+                'field_revision_field_uuke_alipay_trade_no' => array(
+                  'value' => 'field_uuke_alipay_trade_no_value',
+                  'format' => 'field_uuke_alipay_trade_no_format',
+                ),
+              ),
+            ),
+          ),
+        ),
+        'foreign keys' => array(
+          'format' => array(
+            'table' => 'filter_format',
+            'columns' => array(
+              'format' => 'format',
+            ),
+          ),
+        ),
+        'indexes' => array(
+          'format' => array(
+            0 => 'format',
+          ),
+        ),
+        'field_name' => 'field_uuke_alipay_trade_no',
+        'type' => 'text',
+        'module' => 'text',
+        'active' => '1',
+        'locked' => '0',
+        'cardinality' => '1',
+        'deleted' => '0',
+        'columns' => array(
+          'value' => array(
+            'type' => 'varchar',
+            'length' => '255',
+            'not null' => FALSE,
+          ),
+          'format' => array(
+            'type' => 'varchar',
+            'length' => 255,
+            'not null' => FALSE,
+          ),
+        ),
+        'bundles' => array(
+          'node' => array(
+            0 => 'uuke_alipay_order',
+          ),
+        ),
+      ),
+      'field_uuke_alipay_trade_status' => array(
+        'translatable' => '0',
+        'entity_types' => array(),
+        'settings' => array(
+          'max_length' => '255',
+        ),
+        'storage' => array(
+          'type' => 'field_sql_storage',
+          'settings' => array(),
+          'module' => 'field_sql_storage',
+          'active' => '1',
+          'details' => array(
+            'sql' => array(
+              'FIELD_LOAD_CURRENT' => array(
+                'field_data_field_uuke_alipay_trade_status' => array(
+                  'value' => 'field_uuke_alipay_trade_status_value',
+                  'format' => 'field_uuke_alipay_trade_status_format',
+                ),
+              ),
+              'FIELD_LOAD_REVISION' => array(
+                'field_revision_field_uuke_alipay_trade_status' => array(
+                  'value' => 'field_uuke_alipay_trade_status_value',
+                  'format' => 'field_uuke_alipay_trade_status_format',
+                ),
+              ),
+            ),
+          ),
+        ),
+        'foreign keys' => array(
+          'format' => array(
+            'table' => 'filter_format',
+            'columns' => array(
+              'format' => 'format',
+            ),
+          ),
+        ),
+        'indexes' => array(
+          'format' => array(
+            0 => 'format',
+          ),
+        ),
+        'field_name' => 'field_uuke_alipay_trade_status',
+        'type' => 'text',
+        'module' => 'text',
+        'active' => '1',
+        'locked' => '0',
+        'cardinality' => '1',
+        'deleted' => '0',
+        'columns' => array(
+          'value' => array(
+            'type' => 'varchar',
+            'length' => '255',
+            'not null' => FALSE,
+          ),
+          'format' => array(
+            'type' => 'varchar',
+            'length' => 255,
+            'not null' => FALSE,
+          ),
+        ),
+        'bundles' => array(
+          'node' => array(
+            0 => 'uuke_alipay_order',
+          ),
+        ),
+      ),
+      'field_uuke_pay_method' => array(
+        'translatable' => '0',
+        'entity_types' => array(),
+        'settings' => array(
+          'allowed_values' => array(
+            1 => '支付宝',
+            2 => 'Unionpay',
+          ),
+          'allowed_values_function' => '',
+        ),
+        'storage' => array(
+          'type' => 'field_sql_storage',
+          'settings' => array(),
+          'module' => 'field_sql_storage',
+          'active' => '1',
+          'details' => array(
+            'sql' => array(
+              'FIELD_LOAD_CURRENT' => array(
+                'field_data_field_uuke_pay_method' => array(
+                  'value' => 'field_uuke_pay_method_value',
+                ),
+              ),
+              'FIELD_LOAD_REVISION' => array(
+                'field_revision_field_uuke_pay_method' => array(
+                  'value' => 'field_uuke_pay_method_value',
+                ),
+              ),
+            ),
+          ),
+        ),
+        'foreign keys' => array(),
+        'indexes' => array(
+          'value' => array(
+            0 => 'value',
+          ),
+        ),
+        'field_name' => 'field_uuke_pay_method',
+        'type' => 'list_integer',
+        'module' => 'list',
+        'active' => '1',
+        'locked' => '0',
+        'cardinality' => '1',
+        'deleted' => '0',
+        'columns' => array(
+          'value' => array(
+            'type' => 'int',
+            'not null' => FALSE,
+          ),
+        ),
+        'bundles' => array(
+          'node' => array(
+            0 => 'uuke_alipay_order',
+          ),
+        ),
+      ),
+    ),
+    'instances' => array(
+      'body' => array(
+        0 => array(
+          'label' => 'Body',
+          'widget' => array(
+            'type' => 'text_textarea_with_summary',
+            'settings' => array(
+              'rows' => 20,
+              'summary_rows' => 5,
+            ),
+            'weight' => '8',
+            'module' => 'text',
+          ),
+          'settings' => array(
+            'display_summary' => TRUE,
+            'text_processing' => 1,
+            'user_register_form' => FALSE,
+          ),
+          'display' => array(
+            'default' => array(
+              'label' => 'hidden',
+              'type' => 'text_default',
+              'weight' => '0',
+              'settings' => array(),
+              'module' => 'text',
+            ),
+            'teaser' => array(
+              'label' => 'hidden',
+              'type' => 'text_summary_or_trimmed',
+              'settings' => array(
+                'trim_length' => 600,
+              ),
+              'module' => 'text',
+              'weight' => 0,
+            ),
+          ),
+          'required' => FALSE,
+          'description' => '',
+          'default_value' => NULL,
+          'field_name' => 'body',
+          'entity_type' => 'node',
+          'bundle' => 'uuke_alipay_order',
+          'deleted' => '0',
+        ),
+      ),
+      'field_uuke_alipay_order_uid' => array(
+        0 => array(
+          'label' => 'Order uid',
+          'widget' => array(
+            'weight' => '7',
+            'type' => 'options_buttons',
+            'module' => 'options',
+            'active' => 1,
+            'settings' => array(),
+          ),
+          'settings' => array(
+            'user_register_form' => FALSE,
+          ),
+          'display' => array(
+            'default' => array(
+              'label' => 'above',
+              'type' => 'entityreference_label',
+              'settings' => array(
+                'link' => FALSE,
+              ),
+              'module' => 'entityreference',
+              'weight' => 13,
+            ),
+            'teaser' => array(
+              'type' => 'hidden',
+              'label' => 'above',
+              'settings' => array(),
+              'weight' => 0,
+            ),
+          ),
+          'required' => 1,
+          'description' => '',
+          'default_value' => NULL,
+          'field_name' => 'field_uuke_alipay_order_uid',
+          'entity_type' => 'node',
+          'bundle' => 'uuke_alipay_order',
+          'deleted' => '0',
+        ),
+      ),
+      'field_uuke_alipay_product_nid' => array(
+        0 => array(
+          'label' => 'Product Nid',
+          'widget' => array(
+            'weight' => '6',
+            'type' => 'entityreference_autocomplete_tags',
+            'module' => 'entityreference',
+            'active' => 1,
+            'settings' => array(
+              'match_operator' => 'CONTAINS',
+              'size' => '60',
+              'path' => '',
+            ),
+          ),
+          'settings' => array(
+            'user_register_form' => FALSE,
+          ),
+          'display' => array(
+            'default' => array(
+              'label' => 'above',
+              'type' => 'entityreference_label',
+              'weight' => '1',
+              'settings' => array(
+                'link' => FALSE,
+              ),
+              'module' => 'entityreference',
+            ),
+            'teaser' => array(
+              'type' => 'hidden',
+              'label' => 'above',
+              'settings' => array(),
+              'weight' => 0,
+            ),
+          ),
+          'required' => 1,
+          'description' => '',
+          'default_value' => NULL,
+          'field_name' => 'field_uuke_alipay_product_nid',
+          'entity_type' => 'node',
+          'bundle' => 'uuke_alipay_order',
+          'deleted' => '0',
+        ),
+      ),
+      'field_uuke_alipay_product_price' => array(
+        0 => array(
+          'label' => '商品价格',
+          'widget' => array(
+            'weight' => '4',
+            'type' => 'number',
+            'module' => 'number',
+            'active' => 0,
+            'settings' => array(),
+          ),
+          'settings' => array(
+            'min' => '',
+            'max' => '',
+            'prefix' => '￥',
+            'suffix' => '',
+            'user_register_form' => FALSE,
+          ),
+          'display' => array(
+            'default' => array(
+              'label' => 'above',
+              'type' => 'number_decimal',
+              'settings' => array(
+                'thousand_separator' => ' ',
+                'decimal_separator' => '.',
+                'scale' => 2,
+                'prefix_suffix' => TRUE,
+              ),
+              'module' => 'number',
+              'weight' => 11,
+            ),
+            'teaser' => array(
+              'type' => 'hidden',
+              'label' => 'above',
+              'settings' => array(),
+              'weight' => 0,
+            ),
+          ),
+          'required' => 1,
+          'description' => '',
+          'default_value' => NULL,
+          'field_name' => 'field_uuke_alipay_product_price',
+          'entity_type' => 'node',
+          'bundle' => 'uuke_alipay_order',
+          'deleted' => '0',
+        ),
+      ),
+      'field_uuke_alipay_product_title' => array(
+        0 => array(
+          'label' => '商品名称',
+          'widget' => array(
+            'weight' => '2',
+            'type' => 'text_textfield',
+            'module' => 'text',
+            'active' => 1,
+            'settings' => array(
+              'size' => '60',
+            ),
+          ),
+          'settings' => array(
+            'text_processing' => '0',
+            'user_register_form' => FALSE,
+          ),
+          'display' => array(
+            'default' => array(
+              'label' => 'above',
+              'type' => 'text_default',
+              'settings' => array(),
+              'module' => 'text',
+              'weight' => 10,
+            ),
+            'teaser' => array(
+              'type' => 'hidden',
+              'label' => 'above',
+              'settings' => array(),
+              'weight' => 0,
+            ),
+          ),
+          'required' => 1,
+          'description' => '',
+          'default_value' => NULL,
+          'field_name' => 'field_uuke_alipay_product_title',
+          'entity_type' => 'node',
+          'bundle' => 'uuke_alipay_order',
+          'deleted' => '0',
+        ),
+      ),
+      'field_uuke_alipay_product_type' => array(
+        0 => array(
+          'label' => '商品类型',
+          'widget' => array(
+            'weight' => '3',
+            'type' => 'text_textfield',
+            'module' => 'text',
+            'active' => 1,
+            'settings' => array(
+              'size' => '60',
+            ),
+          ),
+          'settings' => array(
+            'text_processing' => '0',
+            'user_register_form' => FALSE,
+          ),
+          'display' => array(
+            'default' => array(
+              'label' => 'above',
+              'type' => 'text_default',
+              'weight' => '5',
+              'settings' => array(),
+              'module' => 'text',
+            ),
+            'teaser' => array(
+              'type' => 'hidden',
+              'label' => 'above',
+              'settings' => array(),
+              'weight' => 0,
+            ),
+          ),
+          'required' => 1,
+          'description' => '',
+          'default_value' => NULL,
+          'field_name' => 'field_uuke_alipay_product_type',
+          'entity_type' => 'node',
+          'bundle' => 'uuke_alipay_order',
+          'deleted' => '0',
+        ),
+      ),
+      'field_uuke_alipay_quantity' => array(
+        0 => array(
+          'label' => '商品数量',
+          'widget' => array(
+            'weight' => '5',
+            'type' => 'number',
+            'module' => 'number',
+            'active' => 0,
+            'settings' => array(),
+          ),
+          'settings' => array(
+            'min' => '1',
+            'max' => '',
+            'prefix' => '',
+            'suffix' => '',
+            'user_register_form' => FALSE,
+          ),
+          'display' => array(
+            'default' => array(
+              'label' => 'above',
+              'type' => 'number_integer',
+              'weight' => '7',
+              'settings' => array(
+                'thousand_separator' => ' ',
+                'decimal_separator' => '.',
+                'scale' => 0,
+                'prefix_suffix' => TRUE,
+              ),
+              'module' => 'number',
+            ),
+            'teaser' => array(
+              'type' => 'hidden',
+              'label' => 'above',
+              'settings' => array(),
+              'weight' => 0,
+            ),
+          ),
+          'required' => 1,
+          'description' => '',
+          'default_value' => array(
+            0 => array(
+              'value' => '1',
+            ),
+          ),
+          'field_name' => 'field_uuke_alipay_quantity',
+          'entity_type' => 'node',
+          'bundle' => 'uuke_alipay_order',
+          'deleted' => '0',
+        ),
+      ),
+      'field_uuke_alipay_return' => array(
+        0 => array(
+          'label' => '完整信息',
+          'widget' => array(
+            'weight' => '9',
+            'type' => 'text_textarea',
+            'module' => 'text',
+            'active' => 1,
+            'settings' => array(
+              'rows' => '5',
+            ),
+          ),
+          'settings' => array(
+            'text_processing' => '0',
+            'user_register_form' => FALSE,
+          ),
+          'display' => array(
+            'default' => array(
+              'label' => 'hidden',
+              'type' => 'hidden',
+              'weight' => '8',
+              'settings' => array(),
+            ),
+            'teaser' => array(
+              'type' => 'hidden',
+              'label' => 'above',
+              'settings' => array(),
+              'weight' => 0,
+            ),
+          ),
+          'required' => 1,
+          'description' => '',
+          'default_value' => NULL,
+          'field_name' => 'field_uuke_alipay_return',
+          'entity_type' => 'node',
+          'bundle' => 'uuke_alipay_order',
+          'deleted' => '0',
+        ),
+      ),
+      'field_uuke_alipay_trade_no' => array(
+        0 => array(
+          'label' => '第三方交易号',
+          'widget' => array(
+            'weight' => '1',
+            'type' => 'text_textfield',
+            'module' => 'text',
+            'active' => 1,
+            'settings' => array(
+              'size' => '60',
+            ),
+          ),
+          'settings' => array(
+            'text_processing' => '0',
+            'user_register_form' => FALSE,
+          ),
+          'display' => array(
+            'default' => array(
+              'label' => 'above',
+              'type' => 'text_default',
+              'weight' => '3',
+              'settings' => array(),
+              'module' => 'text',
+            ),
+            'teaser' => array(
+              'type' => 'hidden',
+              'label' => 'above',
+              'settings' => array(),
+              'weight' => 0,
+            ),
+          ),
+          'required' => 1,
+          'description' => '支付宝交易号或unionpay交易号',
+          'default_value' => NULL,
+          'field_name' => 'field_uuke_alipay_trade_no',
+          'entity_type' => 'node',
+          'bundle' => 'uuke_alipay_order',
+          'deleted' => '0',
+        ),
+      ),
+      'field_uuke_alipay_trade_status' => array(
+        0 => array(
+          'label' => '订单状态',
+          'widget' => array(
+            'weight' => '10',
+            'type' => 'text_textfield',
+            'module' => 'text',
+            'active' => 1,
+            'settings' => array(
+              'size' => '60',
+            ),
+          ),
+          'settings' => array(
+            'text_processing' => '0',
+            'user_register_form' => FALSE,
+          ),
+          'display' => array(
+            'default' => array(
+              'label' => 'above',
+              'type' => 'text_default',
+              'settings' => array(),
+              'module' => 'text',
+              'weight' => 12,
+            ),
+            'teaser' => array(
+              'type' => 'hidden',
+              'label' => 'above',
+              'settings' => array(),
+              'weight' => 0,
+            ),
+          ),
+          'required' => 1,
+          'description' => 'TRADE_FINISHED  交易成功 TRADE_SUCCESS  支付成功WAIT_BUYER_PAY  交易创建 TRADE_CLOSED  交易关闭 WAIT_SELLER_SEND_GOODS',
+          'default_value' => NULL,
+          'field_name' => 'field_uuke_alipay_trade_status',
+          'entity_type' => 'node',
+          'bundle' => 'uuke_alipay_order',
+          'deleted' => '0',
+        ),
+      ),
+      'field_uuke_pay_method' => array(
+        0 => array(
+          'label' => '支付方式',
+          'widget' => array(
+            'weight' => '12',
+            'type' => 'options_select',
+            'module' => 'options',
+            'active' => 1,
+            'settings' => array(),
+          ),
+          'settings' => array(
+            'user_register_form' => FALSE,
+          ),
+          'display' => array(
+            'default' => array(
+              'label' => 'above',
+              'type' => 'list_default',
+              'settings' => array(),
+              'module' => 'list',
+              'weight' => 15,
+            ),
+            'teaser' => array(
+              'type' => 'hidden',
+              'label' => 'above',
+              'settings' => array(),
+              'weight' => 0,
+            ),
+          ),
+          'required' => 0,
+          'description' => '',
+          'default_value' => NULL,
+          'field_name' => 'field_uuke_pay_method',
+          'entity_type' => 'node',
+          'bundle' => 'uuke_alipay_order',
+          'deleted' => '0',
+        ),
+      ),
+    ),
+  );
+  foreach ($data['bundles'] as $type => $bundle) {
+      //node_type_set_defaults
+    if(in_array($type, node_type_get_types())){
+      node_type_set_defaults($bundle);
+      drupal_set_message(t('Content Type : '. $type .' was customed.'));
+      watchdog('uuke_alipay', 'create content type : '. $type);
+    }else{
+      node_type_save($bundle);
+      drupal_set_message(t('Content Type : '. $type .' was created.'));
+      watchdog('uuke_alipay', 'custom content type : '. $type);
+    }
+  }
+  foreach ($data['fields'] as $field_name => $field) {
+    $ori_field = field_info_field($field_name);
+    if (empty($ori_field)) {
+       $field = field_create_field($field);
+       watchdog('uuke_alipay', 'created field for uuke_alipay_order: '.$field_name);
+    }
+  }
+  foreach ($data['instances'] as $instances_name => $instances) {
+    foreach ($instances as $key => $instance) {
+      //$instance = field_info_instance('node', 'body', $type->type);
+      $ori_instance = field_info_instance('node', $instances_name, $instance['bundle']);
+      if (empty($ori_instance)) {
+         $instance = field_create_instance($instance);
+         watchdog('uuke_alipay', 'created instance for uuke_alipay_order:'.$instances_name);
+      }
+    }
+  }
+  // import Alipay order node_type end
+}
+
+/**
+ * Implements hook_uninstall().
+ */
+function uuke_alipay_uninstall() {
+	db_query("DELETE FROM {variable} WHERE name LIKE 'uuke_alipay_%%'");
+}
+/**
+ * Implements hook_enable().
+ */
+function uuke_alipay_enable() {
+  drupal_set_message(t('The uuke_alipay  module was successfully enabled. Please '.l('click here','admin/config/alipay').'to config before use.'), $type = 'status');
+}

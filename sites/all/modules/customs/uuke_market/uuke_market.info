@@ -1,0 +1,5 @@
+name =  UUKE market Module
+description = UUKE Market Module
+package = dev
+core = 7.x
+;configure = admin/config/alipay

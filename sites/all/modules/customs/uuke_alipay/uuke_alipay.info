@@ -1,0 +1,7 @@
+name =  UUKE Alipay module
+description = UUKE Pad Module
+package = dev
+core = 7.x
+configure = admin/config/alipay
+dependencies[] = entityreference
+dependencies[] = views

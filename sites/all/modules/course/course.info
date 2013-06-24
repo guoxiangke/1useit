@@ -1,0 +1,38 @@
+name = Course
+core = 7.x
+description = Create Drupal e-learning courses.
+dependencies[] = ctools
+dependencies[] = uuid
+dependencies[] = views
+dependencies[] = views_bulk_operations
+php = 5
+package = Course
+files[] = includes/course.core.inc
+files[] = includes/course_object.core.inc
+files[] = plugins/course/access/conditional.inc
+files[] = plugins/course/access/grade.inc
+files[] = plugins/course/access/timing.inc
+files[] = tests/CourseAccessTestCase.test
+files[] = tests/CourseContextTestCase.test
+files[] = tests/CourseEnrollmentTestCase.test
+files[] = tests/CourseGradeTestCase.test
+files[] = tests/CourseObjectAccessConditionalTestCase.test
+files[] = tests/CourseObjectAccessTestCase.test
+files[] = tests/CourseObjectAccessTimeTestCase.test
+files[] = tests/CourseObjectNodeTestCase.test
+files[] = tests/CourseObjectTestCase.test
+files[] = tests/CourseOutlineUiTestCase.test
+files[] = tests/CourseTestCase.test
+files[] = views/handlers/course_views_handler_relationship_ce_cr.inc
+files[] = views/handlers/course_views_handler_relationship_ce_sl.inc
+files[] = views/handlers/views_handler_filter_course.inc
+files[] = views/handlers/views_handler_filter_course_type.inc
+files[] = views/handlers/views_join_course.inc
+files[] = views/plugins/views_plugin_argument_validate_course.inc
+
+; Information added by drupal.org packaging script on 2013-05-03
+version = "7.x-1.0-beta2"
+core = "7.x"
+project = "course"
+datestamp = "1367603112"
+

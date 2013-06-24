@@ -1,0 +1,390 @@
+<?php
+
+
+/**
+ * Implements hook_menu().
+ *
+ * Here we set up the URLs (menu entries) for the
+ * form examples. Note that most of the menu items
+ * have page callbacks and page arguments set, with
+ * page arguments set to be functions in external files.
+ */
+function yaouseit_menu() {
+  $items = array();
+  $items['examples/yaouseit'] = array(
+    'title' => 'Form Example',
+    'page callback' => 'yaouseit_intro',
+    'access callback' => TRUE,
+    'expanded' => TRUE,
+  );
+  $items['examples/yaouseit/states'] = array(
+    'title' => '#states example',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('yaouseit_states_form'),
+    'access callback' => TRUE,
+    'description' => 'How to use the #states attribute in FAPI',
+    'file' => 'yaouseit_states.inc',
+  );
+  $items['examples/yaouseit/wizard'] = array(
+    'title' => 'Extensible wizard example',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('yaouseit_wizard'),
+    'access callback' => TRUE,
+    'description' => 'A general approach to a wizard multistep form.',
+    'file' => 'yaouseit_wizard.inc',
+  );
+  $items['examples/yaouseit/element_example'] = array(
+    'title' => 'Element example',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('yaouseit_element_demo_form'),
+    'access callback' => TRUE,
+    'file' => 'yaouseit_elements.inc',
+    'weight' => 100,
+  );
+
+  return $items;
+}
+
+function yaouseit_term_compare($a, $b)
+{
+    //$order = -1; // This is just to reverse the natural sort order (ie make it descending)
+    // if you want a case sensitive sort, swap out strcasecmp() for strcmp()
+    return intval($a->name) > intval($b->name) ? 1 : 0;
+    //return $order * strcasecmp($a->name, $b->name);
+}
+
+/*
+ * @return
+Array
+(
+	[1] => Array
+	(
+		[0] => 9:00
+		[1] => 9:25
+	)
+
+	[2] => Array
+	(
+		[0] => 9:30
+		[1] => 9:55
+	)
+......
+)
+*/
+function yaouseit_get_course_schedule() {
+	$arr = taxonomy_get_tree(variable_get('yaouseit_course_schedule_vid', 7), $parent = 0, $max_depth = NULL, $load_entities = FALSE) ;
+	if(empty($arr))return array();
+	
+	foreach($arr as $one){
+	if( 0 == $one->parents[0] ){
+		$arr1[] = $one;
+	}
+	}
+	usort($arr1, "yaouseit_term_compare");
+	//print_r($arr1);
+	$tree = array();
+	foreach($arr1 as $one1){
+	foreach($arr as $one){
+		if( $one1->tid == $one->parents[0] ){
+			$tree[$one1->name][] = $one->name;
+		}
+	}
+	}
+	//print_r($tree);
+	return $tree;
+}
+
+/**
+ * Page callback for our general info page.
+ */
+function yaouseit_intro() {
+	print_r($_POST);
+
+	$jiao_cai_course = yaouseit_get_jiao_cai_course();
+	//print_r($jiao_cai_course);die;
+/*
+*/
+
+	//drupal_add_js(drupal_get_path('module', 'yaouseit') . '/js/jquery.js');
+	drupal_add_js(drupal_get_path('module', 'yaouseit') . '/js/datepicker.js');
+	//drupal_add_js(drupal_get_path('module', 'yaouseit') . '/js/eye.js');
+	//drupal_add_js(drupal_get_path('module', 'yaouseit') . '/js/utils.js');
+	//drupal_add_js(drupal_get_path('module', 'yaouseit') . '/js/yaouseit.js');
+	drupal_add_css(drupal_get_path('module', 'yaouseit') . '/css/datepicker_nocolor.css');
+	//drupal_add_css(drupal_get_path('module', 'yaouseit') . '/css/layout.css');
+	$date = date('Y').'-'.date('m').'-'.date('d');
+	$current = date('Y').'-'.(date('m')+1).'-01';
+	
+$js = <<<TT
+<script type='text/javascript'>
+
+	var initLayout = function() {
+
+		var now = new Date();
+		now.setHours(0,0,0,0);
+		jQuery('#date').DatePicker({
+			flat: true,
+			date: ['{$date}'],
+			current: '{$current}',
+			format: 'Y-m-d',
+			calendars: 2,
+			onRender: function(date) {
+				return {
+					disabled: (date.valueOf() < now.valueOf()),
+					className: date.valueOf() < now.valueOf() ? 'datepickerSpecial' : false
+				}
+			},
+			onChange: function(formated, dates) {
+				window.location.replace(window.location.href+'/'+formated);
+			},
+			starts: 1
+		});
+
+	};
+	
+	jQuery(document).ready(function() {	initLayout();	});
+</script>
+
+TT;
+
+/*
+SELECT *
+FROM `ui_field_data_field_jiao_cai`
+entity_type bundle deleted entity_id revision_id language delta field_jiao_cai_tid
+taxonomy_term 	english_courses 	0 	96 	96 	und 	0 	86
+taxonomy_term 	english_courses 	0 	96 	96 	und 	1 	87
+*/
+	$arr_course_jao_cai = array();
+	$result = db_query("SELECT * FROM {field_data_field_jiao_cai} WHERE entity_type='taxonomy_term' AND bundle='english_courses' AND deleted=0");
+	while ($record = $result->fetchObject()) {
+		$arr_course_jao_cai[$record->entity_id][] = $record->field_jiao_cai_tid;
+	}
+	//print_r($arr_course_jao_cai);die;
+/*
+Array
+(
+    [96] => Array
+        (
+            [0] => 86
+            [1] => 87
+            [2] => 88
+            [3] => 89
+            [4] => 90
+            [5] => 91
+            [6] => 92
+            [7] => 93
+            [8] => 94
+            [9] => 95
+        )
+
+)
+*/
+/*
+SELECT *
+FROM `ui_field_data_field_course`
+entity_type bundle deleted entity_id revision_id language delta field_course_tid
+profile2 	teacher_profile 	0 	5 	5 	und 	0 	96
+profile2 	teacher_profile 	0 	5 	5 	und 	1 	97
+*/
+	$schedule = yaouseit_get_course_schedule();
+
+$result = db_query("SELECT * FROM {users} u JOIN {users_roles} r ON u.uid=r.uid AND r.rid=" . variable_get('yaouseit_teacher_rid', 6) );
+$allchkboxes = '';
+while ($record = $result->fetchObject()) {
+	//print_r($record);die;
+	$select = $options = '';
+	$result2 = db_query("SELECT * FROM {field_data_field_course} WHERE entity_type='profile2' AND bundle='teacher_profile' AND deleted=0 AND entity_id=".$record->uid);
+	while ($record2 = $result2->fetchObject()) {
+			//print_r($record2);
+		foreach( $arr_course_jao_cai[$record2->field_course_tid] as $j ){
+			//print_r($jiao_cai_course[$j]);
+			$options .= "<option>".$jiao_cai_course[$j]['name']."</option>\n";
+			foreach($jiao_cai_course[$j]['courses'] as $c_tid=> $c_name){
+				$options .= "<option value=$c_tid>$c_name</option>\n";
+			}
+		}
+	}
+	$select = "<select name='select[".$record->uid."][]'>\n".$options."\n</select>\n";
+
+	$chkboxes = '';
+	$hm = intval(date('Hi'));
+	foreach($schedule as $no => $one){	//var_dump(intval(preg_replace('/[^\d]/','',$one[0])) );
+		if( intval(preg_replace('/[^\d]/','',$one[0])) > $hm ){
+		$chkboxes .= "<li><input type=checkbox name=time_slices[".$record->uid."][] value=$no></input>".$one[0] .' - '.$one[1].$select."</li>\n";
+		}
+	}
+	$allchkboxes .= "<div style='float:left;'>".$record->name."<ul>\n$chkboxes\n</ul></div>\n\n";
+}
+	
+	$tetequ_check_code=tetequ_check_code('1useit','7-201');
+	$form = <<<TT
+<hr/>
+<form action="http://www.tetequ.com/api/outer" method="post">
+
+name:<input type=text name="name" value="teacher li"></input>
+role:<input type=text name="role" value="1"></input>
+room_title:<input type=text name="room_title" value="李老师的课堂"></input>
+from:<input type=text name="from" value="1useit"></input>
+check_code:<input type=text name="check_code" value="{$tetequ_check_code}"></input>
+room:<input type=text name="room" value="7-201"></input>
+userid:<input type=text name="userid" value="1"></input>
+<input type=submit value="outer">
+
+</form>
+<p />
+
+TT;
+	
+	$form2 = '<form action="/examples/yaouseit" method="post">';
+	$markup = "<p id='date'></p>\n" . $js ."\n$form". "\n$form2\n$allchkboxes\n<div style='clear:both;' /><input type=submit value='提交'></input></form>";
+	return array('#markup' => $markup);
+
+}
+
+function tetequ_check_code($company_code,$roomid){
+	return md5(base64_encode("{roomid:".$roomid.",key:".$company_code."}"));
+}
+
+
+/*
+ * @return
+*/
+function yaouseit_get_jiao_cai_course() {
+	//$courses = taxonomy_get_tree(variable_get('yaouseit_en_course_vid', 5), $parent = 0, $max_depth = NULL, $load_entities = FALSE) ;
+	//print_r($courses);die;
+	$jiao_cai = taxonomy_get_tree(variable_get('yaouseit_jiao_cai_vid', 4), $parent = 0, $max_depth = NULL, $load_entities = FALSE) ;
+	//print_r($jiao_cai);die;
+/*
+[9] => stdClass Object
+        (
+            [tid] => 91
+            [vid] => 4
+            [name] => 剑桥国际英语教程1
+            [description] => 
+            [format] => 
+            [weight] => 1
+            [depth] => 3
+            [parents] => Array
+                (
+                    [0] => 27
+                )
+
+        )
+*/
+	$arr = taxonomy_get_tree(variable_get('yaouseit_jiao_cai_course_vid', 9), $parent = 0, $max_depth = NULL, $load_entities = FALSE) ;
+	if(empty($arr))return array();
+	//print_r($arr);die;
+	foreach($arr as $one){
+	if( 0 == $one->parents[0] ){
+		$arr1[] = $one;
+	}
+	}
+	//print_r($arr1);
+	$tree = array();
+	foreach($arr1 as $one1){
+	foreach($arr as $one){
+		if( $one1->tid == $one->parents[0] ){
+			foreach($jiao_cai as $one2){
+				if( $one1->name == $one2->name ){
+					$tree[$one2->tid]['name'] = $one1->name;
+					$tree[$one2->tid]['courses'][$one->tid] = $one->name;
+				}
+			}
+		}
+	}
+	}
+	//print_r($tree);die;
+/*
+Array
+(
+    [91] => Array
+        (
+            [name] => 剑桥国际英语教程1
+            [courses] => Array
+                (
+                    [491] => 第一课
+                    [497] => 第七课
+                    [493] => 第三课
+                    [499] => 第九课
+                    [492] => 第二课
+                    [495] => 第五课
+                    [498] => 第八课
+                    [496] => 第六课
+                    [501] => 第十一课
+                    [502] => 第十二课
+                    [500] => 第十课
+                    [494] => 第四课
+                )
+
+        )
+*/
+	return $tree;
+}
+
+/*
+ * @return
+Array
+(
+    [剑桥国际英语教程1] => Array
+        (
+            [0] => 第一课
+            [1] => 第七课
+            [2] => 第三课
+            [3] => 第九课
+            [4] => 第二课
+            [5] => 第五课
+            [6] => 第八课
+            [7] => 第六课
+            [8] => 第十一课
+            [9] => 第十二课
+            [10] => 第十课
+            [11] => 第四课
+        )
+*/
+function yaouseit_get_jiao_cai_course0() {
+	$arr = taxonomy_get_tree(variable_get('yaouseit_jiao_cai_course_vid', 9), $parent = 0, $max_depth = NULL, $load_entities = FALSE) ;
+	if(empty($arr))return array();
+	
+	foreach($arr as $one){
+	if( 0 == $one->parents[0] ){
+		$arr1[] = $one;
+	}
+	}
+	//print_r($arr1);
+	$tree = array();
+	foreach($arr1 as $one1){
+	foreach($arr as $one){
+		if( $one1->tid == $one->parents[0] ){
+			$tree[$one1->name][] = $one->name;
+		}
+	}
+	}
+	//print_r($tree);die;
+	return $tree;
+}
+
+/**
+ * Implements hook_element_info().
+ *
+ * To keep the various pieces of the example together in external files,
+ * this just returns _yaouseit_elements().
+ */
+function yaouseit_element_info() {
+  require_once('yaouseit_elements.inc');
+  return _yaouseit_element_info();
+}
+
+/**
+ * Implements hook_theme().
+ *
+ * The only theme implementation is by the element example. To keep the various
+ * parts of the example together, this actually returns
+ * _yaouseit_element_theme().
+ */
+function yaouseit_theme($existing, $type, $theme, $path) {
+  require_once('yaouseit_elements.inc');
+  return _yaouseit_element_theme($existing, $type, $theme, $path);
+}
+/**
+ * @} End of "defgroup yaouseit".
+ */

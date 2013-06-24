@@ -1,0 +1,25 @@
+1.集成支付宝担保支付（即时到账支付，理论上支持，没有测试，需要商家与支付宝签约，条件比较高）
+2.实现对商品节点的单次购买
+3.商家订单管理系统，卖家自动发货系统（默认付款后就自动发货）
+4.订单类型为系统创建，只有管理员才可以编辑
+Install：
+
+TODO:
+1.批量商品购买 数量>1
+2.一个订单多个商品等
+
+Usefull functions:
+/**
+ * 判断某节点商品是否购买
+ * @return TRUE is paid.
+ */
+function uuke_alipay_is_paid($nid) {
+
+}
+/**
+ * 获取已购买的商品，by user or content_type/product_type
+ * @return array(nid1,nid2)
+ */
+function uuke_alipay_all_paid($account=NULL,$content_type='app') {
+
+}

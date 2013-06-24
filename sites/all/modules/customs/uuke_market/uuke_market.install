@@ -1,0 +1,1282 @@
+<?php
+/**
+ * Implements hook_install().
+ */
+function uuke_market_install() {
+  // Check if our field is not already created.
+  $data = array(
+    'bundles' => array(
+      'app' => (object) array(
+        'type' => 'app',
+        'name' => 'Application',
+        'base' => 'node_content',
+        'module' => 'node',
+        'description' => 'PAD应用',
+        'help' => '',
+        'has_title' => '1',
+        'title_label' => 'Title',
+        'custom' => '1',
+        'modified' => '1',
+        'locked' => '0',
+        'disabled' => '0',
+        'orig_type' => 'app',
+        'disabled_changed' => FALSE,
+        'bc_entity_type' => 'node',
+      ),
+    ),
+    'fields' => array(
+      'field_uuke_price' => array(
+        'translatable' => '0',
+        'entity_types' => array(),
+        'settings' => array(
+          'precision' => '10',
+          'scale' => '2',
+          'decimal_separator' => '.',
+        ),
+        'storage' => array(
+          'type' => 'field_sql_storage',
+          'settings' => array(),
+          'module' => 'field_sql_storage',
+          'active' => '1',
+          'details' => array(
+            'sql' => array(
+              'FIELD_LOAD_CURRENT' => array(
+                'field_data_field_uuke_price' => array(
+                  'value' => 'field_uuke_price_value',
+                ),
+              ),
+              'FIELD_LOAD_REVISION' => array(
+                'field_revision_field_uuke_price' => array(
+                  'value' => 'field_uuke_price_value',
+                ),
+              ),
+            ),
+          ),
+        ),
+        'foreign keys' => array(),
+        'indexes' => array(),
+        'field_name' => 'field_uuke_price',
+        'type' => 'number_decimal',
+        'module' => 'number',
+        'active' => '1',
+        'locked' => '0',
+        'cardinality' => '1',
+        'deleted' => '0',
+        'columns' => array(
+          'value' => array(
+            'type' => 'numeric',
+            'precision' => '10',
+            'scale' => '2',
+            'not null' => FALSE,
+          ),
+        ),
+        'bundles' => array(
+          'node' => array(
+            0 => 'app',
+          ),
+        ),
+      ),
+    ),
+    'instances' => array(
+      'field_uuke_price' => array(
+        0 => array(
+          'label' => 'Price',
+          'widget' => array(
+            'type' => 'number',
+            'weight' => '5',
+            'settings' => array(),
+            'module' => 'number',
+          ),
+          'settings' => array(
+            'min' => '',
+            'max' => '',
+            'prefix' => '',
+            'suffix' => '',
+            'user_register_form' => FALSE,
+          ),
+          'display' => array(
+            'default' => array(
+              'label' => 'above',
+              'type' => 'number_decimal',
+              'settings' => array(
+                'thousand_separator' => ' ',
+                'decimal_separator' => '.',
+                'scale' => 2,
+                'prefix_suffix' => TRUE,
+              ),
+              'module' => 'number',
+              'weight' => 9,
+            ),
+            'teaser' => array(
+              'type' => 'hidden',
+              'label' => 'above',
+              'settings' => array(),
+              'weight' => 0,
+            ),
+          ),
+          'required' => FALSE,
+          'description' => '',
+          'field_name' => 'field_uuke_price',
+          'entity_type' => 'node',
+          'bundle' => 'app',
+          'deleted' => '0',
+          'default_value' => NULL,
+        ),
+      ),
+    ),
+  );
+  //full content type of app.
+  $data = array(
+    'bundles' => array(
+      'app' => (object) array(
+        'type' => 'app',
+        'name' => 'Application',
+        'base' => 'node_content',
+        'module' => 'node',
+        'description' => 'PAD应用',
+        'help' => '',
+        'has_title' => '1',
+        'title_label' => 'Title',
+        'custom' => '1',
+        'modified' => '1',
+        'locked' => '0',
+        'disabled' => '0',
+        'orig_type' => 'app',
+        'disabled_changed' => FALSE,
+        'bc_entity_type' => 'node',
+      ),
+    ),
+    'fields' => array(
+      'body' => array(
+        'entity_types' => array(
+          0 => 'node',
+        ),
+        'translatable' => '0',
+        'settings' => array(),
+        'storage' => array(
+          'type' => 'field_sql_storage',
+          'settings' => array(),
+          'module' => 'field_sql_storage',
+          'active' => '1',
+          'details' => array(
+            'sql' => array(
+              'FIELD_LOAD_CURRENT' => array(
+                'field_data_body' => array(
+                  'value' => 'body_value',
+                  'summary' => 'body_summary',
+                  'format' => 'body_format',
+                ),
+              ),
+              'FIELD_LOAD_REVISION' => array(
+                'field_revision_body' => array(
+                  'value' => 'body_value',
+                  'summary' => 'body_summary',
+                  'format' => 'body_format',
+                ),
+              ),
+            ),
+          ),
+        ),
+        'foreign keys' => array(
+          'format' => array(
+            'table' => 'filter_format',
+            'columns' => array(
+              'format' => 'format',
+            ),
+          ),
+        ),
+        'indexes' => array(
+          'format' => array(
+            0 => 'format',
+          ),
+        ),
+        'field_name' => 'body',
+        'type' => 'text_with_summary',
+        'module' => 'text',
+        'active' => '1',
+        'locked' => '0',
+        'cardinality' => '1',
+        'deleted' => '0',
+        'columns' => array(
+          'value' => array(
+            'type' => 'text',
+            'size' => 'big',
+            'not null' => FALSE,
+          ),
+          'summary' => array(
+            'type' => 'text',
+            'size' => 'big',
+            'not null' => FALSE,
+          ),
+          'format' => array(
+            'type' => 'varchar',
+            'length' => 255,
+            'not null' => FALSE,
+          ),
+        ),
+        'bundles' => array(
+          'node' => array(
+            0 => 'page',
+            1 => 'article',
+            2 => 'app',
+            3 => 'uuke_alipay_order',
+          ),
+        ),
+      ),
+      'field_app_apk' => array(
+        'translatable' => '0',
+        'entity_types' => array(),
+        'settings' => array(
+          'display_field' => 0,
+          'display_default' => 0,
+          'uri_scheme' => 'public',
+        ),
+        'storage' => array(
+          'type' => 'field_sql_storage',
+          'settings' => array(),
+          'module' => 'field_sql_storage',
+          'active' => '1',
+          'details' => array(
+            'sql' => array(
+              'FIELD_LOAD_CURRENT' => array(
+                'field_data_field_app_apk' => array(
+                  'fid' => 'field_app_apk_fid',
+                  'display' => 'field_app_apk_display',
+                  'description' => 'field_app_apk_description',
+                ),
+              ),
+              'FIELD_LOAD_REVISION' => array(
+                'field_revision_field_app_apk' => array(
+                  'fid' => 'field_app_apk_fid',
+                  'display' => 'field_app_apk_display',
+                  'description' => 'field_app_apk_description',
+                ),
+              ),
+            ),
+          ),
+        ),
+        'foreign keys' => array(
+          'fid' => array(
+            'table' => 'file_managed',
+            'columns' => array(
+              'fid' => 'fid',
+            ),
+          ),
+        ),
+        'indexes' => array(
+          'fid' => array(
+            0 => 'fid',
+          ),
+        ),
+        'field_name' => 'field_app_apk',
+        'type' => 'file',
+        'module' => 'file',
+        'active' => '1',
+        'locked' => '0',
+        'cardinality' => '1',
+        'deleted' => '0',
+        'columns' => array(
+          'fid' => array(
+            'description' => 'The {file_managed}.fid being referenced in this field.',
+            'type' => 'int',
+            'not null' => FALSE,
+            'unsigned' => TRUE,
+          ),
+          'display' => array(
+            'description' => 'Flag to control whether this file should be displayed when viewing content.',
+            'type' => 'int',
+            'size' => 'tiny',
+            'unsigned' => TRUE,
+            'not null' => TRUE,
+            'default' => 1,
+          ),
+          'description' => array(
+            'description' => 'A description of the file.',
+            'type' => 'text',
+            'not null' => FALSE,
+          ),
+        ),
+        'bundles' => array(
+          'node' => array(
+            0 => 'app',
+          ),
+        ),
+      ),
+      'field_app_focus_image' => array(
+        'translatable' => '0',
+        'entity_types' => array(),
+        'settings' => array(
+          'uri_scheme' => 'public',
+          'default_image' => 0,
+        ),
+        'storage' => array(
+          'type' => 'field_sql_storage',
+          'settings' => array(),
+          'module' => 'field_sql_storage',
+          'active' => '1',
+          'details' => array(
+            'sql' => array(
+              'FIELD_LOAD_CURRENT' => array(
+                'field_data_field_app_focus_image' => array(
+                  'fid' => 'field_app_focus_image_fid',
+                  'alt' => 'field_app_focus_image_alt',
+                  'title' => 'field_app_focus_image_title',
+                  'width' => 'field_app_focus_image_width',
+                  'height' => 'field_app_focus_image_height',
+                ),
+              ),
+              'FIELD_LOAD_REVISION' => array(
+                'field_revision_field_app_focus_image' => array(
+                  'fid' => 'field_app_focus_image_fid',
+                  'alt' => 'field_app_focus_image_alt',
+                  'title' => 'field_app_focus_image_title',
+                  'width' => 'field_app_focus_image_width',
+                  'height' => 'field_app_focus_image_height',
+                ),
+              ),
+            ),
+          ),
+        ),
+        'foreign keys' => array(
+          'fid' => array(
+            'table' => 'file_managed',
+            'columns' => array(
+              'fid' => 'fid',
+            ),
+          ),
+        ),
+        'indexes' => array(
+          'fid' => array(
+            0 => 'fid',
+          ),
+        ),
+        'field_name' => 'field_app_focus_image',
+        'type' => 'image',
+        'module' => 'image',
+        'active' => '1',
+        'locked' => '0',
+        'cardinality' => '1',
+        'deleted' => '0',
+        'columns' => array(
+          'fid' => array(
+            'description' => 'The {file_managed}.fid being referenced in this field.',
+            'type' => 'int',
+            'not null' => FALSE,
+            'unsigned' => TRUE,
+          ),
+          'alt' => array(
+            'description' => 'Alternative image text, for the image\'s \'alt\' attribute.',
+            'type' => 'varchar',
+            'length' => 512,
+            'not null' => FALSE,
+          ),
+          'title' => array(
+            'description' => 'Image title text, for the image\'s \'title\' attribute.',
+            'type' => 'varchar',
+            'length' => 1024,
+            'not null' => FALSE,
+          ),
+          'width' => array(
+            'description' => 'The width of the image in pixels.',
+            'type' => 'int',
+            'unsigned' => TRUE,
+          ),
+          'height' => array(
+            'description' => 'The height of the image in pixels.',
+            'type' => 'int',
+            'unsigned' => TRUE,
+          ),
+        ),
+        'bundles' => array(
+          'node' => array(
+            0 => 'app',
+          ),
+        ),
+      ),
+      'field_app_icon' => array(
+        'translatable' => '0',
+        'entity_types' => array(),
+        'settings' => array(
+          'uri_scheme' => 'public',
+          'default_image' => 0,
+        ),
+        'storage' => array(
+          'type' => 'field_sql_storage',
+          'settings' => array(),
+          'module' => 'field_sql_storage',
+          'active' => '1',
+          'details' => array(
+            'sql' => array(
+              'FIELD_LOAD_CURRENT' => array(
+                'field_data_field_app_icon' => array(
+                  'fid' => 'field_app_icon_fid',
+                  'alt' => 'field_app_icon_alt',
+                  'title' => 'field_app_icon_title',
+                  'width' => 'field_app_icon_width',
+                  'height' => 'field_app_icon_height',
+                ),
+              ),
+              'FIELD_LOAD_REVISION' => array(
+                'field_revision_field_app_icon' => array(
+                  'fid' => 'field_app_icon_fid',
+                  'alt' => 'field_app_icon_alt',
+                  'title' => 'field_app_icon_title',
+                  'width' => 'field_app_icon_width',
+                  'height' => 'field_app_icon_height',
+                ),
+              ),
+            ),
+          ),
+        ),
+        'foreign keys' => array(
+          'fid' => array(
+            'table' => 'file_managed',
+            'columns' => array(
+              'fid' => 'fid',
+            ),
+          ),
+        ),
+        'indexes' => array(
+          'fid' => array(
+            0 => 'fid',
+          ),
+        ),
+        'field_name' => 'field_app_icon',
+        'type' => 'image',
+        'module' => 'image',
+        'active' => '1',
+        'locked' => '0',
+        'cardinality' => '1',
+        'deleted' => '0',
+        'columns' => array(
+          'fid' => array(
+            'description' => 'The {file_managed}.fid being referenced in this field.',
+            'type' => 'int',
+            'not null' => FALSE,
+            'unsigned' => TRUE,
+          ),
+          'alt' => array(
+            'description' => 'Alternative image text, for the image\'s \'alt\' attribute.',
+            'type' => 'varchar',
+            'length' => 512,
+            'not null' => FALSE,
+          ),
+          'title' => array(
+            'description' => 'Image title text, for the image\'s \'title\' attribute.',
+            'type' => 'varchar',
+            'length' => 1024,
+            'not null' => FALSE,
+          ),
+          'width' => array(
+            'description' => 'The width of the image in pixels.',
+            'type' => 'int',
+            'unsigned' => TRUE,
+          ),
+          'height' => array(
+            'description' => 'The height of the image in pixels.',
+            'type' => 'int',
+            'unsigned' => TRUE,
+          ),
+        ),
+        'bundles' => array(
+          'node' => array(
+            0 => 'app',
+          ),
+        ),
+      ),
+      'field_app_package_name' => array(
+        'translatable' => '0',
+        'entity_types' => array(),
+        'settings' => array(
+          'max_length' => '255',
+        ),
+        'storage' => array(
+          'type' => 'field_sql_storage',
+          'settings' => array(),
+          'module' => 'field_sql_storage',
+          'active' => '1',
+          'details' => array(
+            'sql' => array(
+              'FIELD_LOAD_CURRENT' => array(
+                'field_data_field_app_package_name' => array(
+                  'value' => 'field_app_package_name_value',
+                  'format' => 'field_app_package_name_format',
+                ),
+              ),
+              'FIELD_LOAD_REVISION' => array(
+                'field_revision_field_app_package_name' => array(
+                  'value' => 'field_app_package_name_value',
+                  'format' => 'field_app_package_name_format',
+                ),
+              ),
+            ),
+          ),
+        ),
+        'foreign keys' => array(
+          'format' => array(
+            'table' => 'filter_format',
+            'columns' => array(
+              'format' => 'format',
+            ),
+          ),
+        ),
+        'indexes' => array(
+          'format' => array(
+            0 => 'format',
+          ),
+        ),
+        'field_name' => 'field_app_package_name',
+        'type' => 'text',
+        'module' => 'text',
+        'active' => '1',
+        'locked' => '0',
+        'cardinality' => '1',
+        'deleted' => '0',
+        'columns' => array(
+          'value' => array(
+            'type' => 'varchar',
+            'length' => '255',
+            'not null' => FALSE,
+          ),
+          'format' => array(
+            'type' => 'varchar',
+            'length' => 255,
+            'not null' => FALSE,
+          ),
+        ),
+        'bundles' => array(
+          'node' => array(
+            0 => 'app',
+          ),
+        ),
+      ),
+      'field_app_screenshot' => array(
+        'translatable' => '0',
+        'entity_types' => array(),
+        'settings' => array(
+          'uri_scheme' => 'public',
+          'default_image' => 0,
+        ),
+        'storage' => array(
+          'type' => 'field_sql_storage',
+          'settings' => array(),
+          'module' => 'field_sql_storage',
+          'active' => '1',
+          'details' => array(
+            'sql' => array(
+              'FIELD_LOAD_CURRENT' => array(
+                'field_data_field_app_screenshot' => array(
+                  'fid' => 'field_app_screenshot_fid',
+                  'alt' => 'field_app_screenshot_alt',
+                  'title' => 'field_app_screenshot_title',
+                  'width' => 'field_app_screenshot_width',
+                  'height' => 'field_app_screenshot_height',
+                ),
+              ),
+              'FIELD_LOAD_REVISION' => array(
+                'field_revision_field_app_screenshot' => array(
+                  'fid' => 'field_app_screenshot_fid',
+                  'alt' => 'field_app_screenshot_alt',
+                  'title' => 'field_app_screenshot_title',
+                  'width' => 'field_app_screenshot_width',
+                  'height' => 'field_app_screenshot_height',
+                ),
+              ),
+            ),
+          ),
+        ),
+        'foreign keys' => array(
+          'fid' => array(
+            'table' => 'file_managed',
+            'columns' => array(
+              'fid' => 'fid',
+            ),
+          ),
+        ),
+        'indexes' => array(
+          'fid' => array(
+            0 => 'fid',
+          ),
+        ),
+        'field_name' => 'field_app_screenshot',
+        'type' => 'image',
+        'module' => 'image',
+        'active' => '1',
+        'locked' => '0',
+        'cardinality' => '-1',
+        'deleted' => '0',
+        'columns' => array(
+          'fid' => array(
+            'description' => 'The {file_managed}.fid being referenced in this field.',
+            'type' => 'int',
+            'not null' => FALSE,
+            'unsigned' => TRUE,
+          ),
+          'alt' => array(
+            'description' => 'Alternative image text, for the image\'s \'alt\' attribute.',
+            'type' => 'varchar',
+            'length' => 512,
+            'not null' => FALSE,
+          ),
+          'title' => array(
+            'description' => 'Image title text, for the image\'s \'title\' attribute.',
+            'type' => 'varchar',
+            'length' => 1024,
+            'not null' => FALSE,
+          ),
+          'width' => array(
+            'description' => 'The width of the image in pixels.',
+            'type' => 'int',
+            'unsigned' => TRUE,
+          ),
+          'height' => array(
+            'description' => 'The height of the image in pixels.',
+            'type' => 'int',
+            'unsigned' => TRUE,
+          ),
+        ),
+        'bundles' => array(
+          'node' => array(
+            0 => 'app',
+          ),
+        ),
+      ),
+      'field_app_video' => array(
+        'translatable' => '0',
+        'entity_types' => array(),
+        'settings' => array(
+          'display_field' => 0,
+          'display_default' => 0,
+          'uri_scheme' => 'public',
+        ),
+        'storage' => array(
+          'type' => 'field_sql_storage',
+          'settings' => array(),
+          'module' => 'field_sql_storage',
+          'active' => '1',
+          'details' => array(
+            'sql' => array(
+              'FIELD_LOAD_CURRENT' => array(
+                'field_data_field_app_video' => array(
+                  'fid' => 'field_app_video_fid',
+                  'display' => 'field_app_video_display',
+                  'description' => 'field_app_video_description',
+                ),
+              ),
+              'FIELD_LOAD_REVISION' => array(
+                'field_revision_field_app_video' => array(
+                  'fid' => 'field_app_video_fid',
+                  'display' => 'field_app_video_display',
+                  'description' => 'field_app_video_description',
+                ),
+              ),
+            ),
+          ),
+        ),
+        'foreign keys' => array(
+          'fid' => array(
+            'table' => 'file_managed',
+            'columns' => array(
+              'fid' => 'fid',
+            ),
+          ),
+        ),
+        'indexes' => array(
+          'fid' => array(
+            0 => 'fid',
+          ),
+        ),
+        'field_name' => 'field_app_video',
+        'type' => 'file',
+        'module' => 'file',
+        'active' => '1',
+        'locked' => '0',
+        'cardinality' => '1',
+        'deleted' => '0',
+        'columns' => array(
+          'fid' => array(
+            'description' => 'The {file_managed}.fid being referenced in this field.',
+            'type' => 'int',
+            'not null' => FALSE,
+            'unsigned' => TRUE,
+          ),
+          'display' => array(
+            'description' => 'Flag to control whether this file should be displayed when viewing content.',
+            'type' => 'int',
+            'size' => 'tiny',
+            'unsigned' => TRUE,
+            'not null' => TRUE,
+            'default' => 1,
+          ),
+          'description' => array(
+            'description' => 'A description of the file.',
+            'type' => 'text',
+            'not null' => FALSE,
+          ),
+        ),
+        'bundles' => array(
+          'node' => array(
+            0 => 'app',
+          ),
+        ),
+      ),
+      'field_area' => array(
+        'translatable' => '0',
+        'entity_types' => array(),
+        'settings' => array(
+          'allowed_values' => array(
+            0 => array(
+              'vocabulary' => 'area',
+              'parent' => '0',
+            ),
+          ),
+        ),
+        'storage' => array(
+          'type' => 'field_sql_storage',
+          'settings' => array(),
+          'module' => 'field_sql_storage',
+          'active' => '1',
+          'details' => array(
+            'sql' => array(
+              'FIELD_LOAD_CURRENT' => array(
+                'field_data_field_area' => array(
+                  'tid' => 'field_area_tid',
+                ),
+              ),
+              'FIELD_LOAD_REVISION' => array(
+                'field_revision_field_area' => array(
+                  'tid' => 'field_area_tid',
+                ),
+              ),
+            ),
+          ),
+        ),
+        'foreign keys' => array(
+          'tid' => array(
+            'table' => 'taxonomy_term_data',
+            'columns' => array(
+              'tid' => 'tid',
+            ),
+          ),
+        ),
+        'indexes' => array(
+          'tid' => array(
+            0 => 'tid',
+          ),
+        ),
+        'field_name' => 'field_area',
+        'type' => 'taxonomy_term_reference',
+        'module' => 'taxonomy',
+        'active' => '1',
+        'locked' => '0',
+        'cardinality' => '1',
+        'deleted' => '0',
+        'columns' => array(
+          'tid' => array(
+            'type' => 'int',
+            'unsigned' => TRUE,
+            'not null' => FALSE,
+          ),
+        ),
+        'bundles' => array(
+          'node' => array(
+            0 => 'app',
+          ),
+        ),
+      ),
+      'field_uuke_price' => array(
+        'translatable' => '0',
+        'entity_types' => array(),
+        'settings' => array(
+          'precision' => '10',
+          'scale' => '2',
+          'decimal_separator' => '.',
+        ),
+        'storage' => array(
+          'type' => 'field_sql_storage',
+          'settings' => array(),
+          'module' => 'field_sql_storage',
+          'active' => '1',
+          'details' => array(
+            'sql' => array(
+              'FIELD_LOAD_CURRENT' => array(
+                'field_data_field_uuke_price' => array(
+                  'value' => 'field_uuke_price_value',
+                ),
+              ),
+              'FIELD_LOAD_REVISION' => array(
+                'field_revision_field_uuke_price' => array(
+                  'value' => 'field_uuke_price_value',
+                ),
+              ),
+            ),
+          ),
+        ),
+        'foreign keys' => array(),
+        'indexes' => array(),
+        'field_name' => 'field_uuke_price',
+        'type' => 'number_decimal',
+        'module' => 'number',
+        'active' => '1',
+        'locked' => '0',
+        'cardinality' => '1',
+        'deleted' => '0',
+        'columns' => array(
+          'value' => array(
+            'type' => 'numeric',
+            'precision' => '10',
+            'scale' => '2',
+            'not null' => FALSE,
+          ),
+        ),
+        'bundles' => array(
+          'node' => array(
+            0 => 'app',
+          ),
+        ),
+      ),
+    ),
+    'instances' => array(
+      'body' => array(
+        0 => array(
+          'label' => 'Description',
+          'widget' => array(
+            'weight' => '-4',
+            'type' => 'text_textarea_with_summary',
+            'module' => 'text',
+            'active' => 1,
+            'settings' => array(
+              'rows' => '20',
+              'summary_rows' => 5,
+            ),
+          ),
+          'settings' => array(
+            'text_processing' => '1',
+            'display_summary' => 1,
+            'user_register_form' => FALSE,
+          ),
+          'display' => array(
+            'default' => array(
+              'label' => 'hidden',
+              'type' => 'text_default',
+              'settings' => array(),
+              'module' => 'text',
+              'weight' => 0,
+            ),
+            'teaser' => array(
+              'label' => 'hidden',
+              'type' => 'text_summary_or_trimmed',
+              'settings' => array(
+                'trim_length' => 600,
+              ),
+              'module' => 'text',
+              'weight' => 0,
+            ),
+          ),
+          'required' => 0,
+          'description' => '',
+          'default_value' => NULL,
+          'field_name' => 'body',
+          'entity_type' => 'node',
+          'bundle' => 'app',
+          'deleted' => '0',
+        ),
+      ),
+      'field_app_apk' => array(
+        0 => array(
+          'label' => 'APK',
+          'widget' => array(
+            'weight' => '1',
+            'type' => 'file_generic',
+            'module' => 'file',
+            'active' => 1,
+            'settings' => array(
+              'progress_indicator' => 'throbber',
+            ),
+          ),
+          'settings' => array(
+            'file_directory' => 'app/apk',
+            'file_extensions' => 'apk',
+            'max_filesize' => '20MB',
+            'description_field' => 0,
+            'user_register_form' => FALSE,
+          ),
+          'display' => array(
+            'default' => array(
+              'label' => 'above',
+              'type' => 'file_default',
+              'settings' => array(),
+              'module' => 'file',
+              'weight' => 5,
+            ),
+            'teaser' => array(
+              'type' => 'hidden',
+              'label' => 'above',
+              'settings' => array(),
+              'weight' => 0,
+            ),
+          ),
+          'required' => 1,
+          'description' => '',
+          'field_name' => 'field_app_apk',
+          'entity_type' => 'node',
+          'bundle' => 'app',
+          'deleted' => '0',
+        ),
+      ),
+      'field_app_focus_image' => array(
+        0 => array(
+          'label' => 'Focus image',
+          'widget' => array(
+            'weight' => '-2',
+            'type' => 'image_image',
+            'module' => 'image',
+            'active' => 1,
+            'settings' => array(
+              'progress_indicator' => 'throbber',
+              'preview_image_style' => 'thumbnail',
+            ),
+          ),
+          'settings' => array(
+            'file_directory' => 'app/focus',
+            'file_extensions' => 'png gif jpg jpeg',
+            'max_filesize' => '',
+            'max_resolution' => '1024x768',
+            'min_resolution' => '320x240',
+            'alt_field' => 0,
+            'title_field' => 0,
+            'default_image' => 0,
+            'user_register_form' => FALSE,
+          ),
+          'display' => array(
+            'default' => array(
+              'label' => 'above',
+              'type' => 'image',
+              'settings' => array(
+                'image_style' => '',
+                'image_link' => '',
+              ),
+              'module' => 'image',
+              'weight' => 2,
+            ),
+            'teaser' => array(
+              'type' => 'hidden',
+              'label' => 'above',
+              'settings' => array(),
+              'weight' => 0,
+            ),
+          ),
+          'required' => 1,
+          'description' => '',
+          'field_name' => 'field_app_focus_image',
+          'entity_type' => 'node',
+          'bundle' => 'app',
+          'deleted' => '0',
+        ),
+      ),
+      'field_app_icon' => array(
+        0 => array(
+          'label' => 'Icon',
+          'widget' => array(
+            'weight' => '-3',
+            'type' => 'image_image',
+            'module' => 'image',
+            'active' => 1,
+            'settings' => array(
+              'progress_indicator' => 'throbber',
+              'preview_image_style' => 'thumbnail',
+            ),
+          ),
+          'settings' => array(
+            'file_directory' => 'app/icon',
+            'file_extensions' => 'png gif jpg jpeg',
+            'max_filesize' => '',
+            'max_resolution' => '128x128',
+            'min_resolution' => '24x24',
+            'alt_field' => 0,
+            'title_field' => 0,
+            'default_image' => 0,
+            'user_register_form' => FALSE,
+          ),
+          'display' => array(
+            'default' => array(
+              'label' => 'above',
+              'type' => 'image',
+              'settings' => array(
+                'image_style' => '',
+                'image_link' => '',
+              ),
+              'module' => 'image',
+              'weight' => 1,
+            ),
+            'teaser' => array(
+              'type' => 'hidden',
+              'label' => 'above',
+              'settings' => array(),
+              'weight' => 0,
+            ),
+          ),
+          'required' => 1,
+          'description' => '',
+          'field_name' => 'field_app_icon',
+          'entity_type' => 'node',
+          'bundle' => 'app',
+          'deleted' => '0',
+        ),
+      ),
+      'field_app_package_name' => array(
+        0 => array(
+          'label' => 'Package Name',
+          'widget' => array(
+            'weight' => '4',
+            'type' => 'text_textfield',
+            'module' => 'text',
+            'active' => 1,
+            'settings' => array(
+              'size' => '60',
+            ),
+          ),
+          'settings' => array(
+            'text_processing' => '0',
+            'user_register_form' => FALSE,
+          ),
+          'display' => array(
+            'default' => array(
+              'label' => 'above',
+              'type' => 'text_default',
+              'settings' => array(),
+              'module' => 'text',
+              'weight' => 8,
+            ),
+            'teaser' => array(
+              'type' => 'hidden',
+              'label' => 'above',
+              'settings' => array(),
+              'weight' => 0,
+            ),
+          ),
+          'required' => 1,
+          'description' => '',
+          'default_value' => NULL,
+          'field_name' => 'field_app_package_name',
+          'entity_type' => 'node',
+          'bundle' => 'app',
+          'deleted' => '0',
+        ),
+      ),
+      'field_app_screenshot' => array(
+        0 => array(
+          'label' => 'Screenshot',
+          'widget' => array(
+            'weight' => '-1',
+            'type' => 'image_image',
+            'module' => 'image',
+            'active' => 1,
+            'settings' => array(
+              'progress_indicator' => 'throbber',
+              'preview_image_style' => 'thumbnail',
+            ),
+          ),
+          'settings' => array(
+            'file_directory' => 'app/screenshot',
+            'file_extensions' => 'png gif jpg jpeg',
+            'max_filesize' => '',
+            'max_resolution' => '640x480',
+            'min_resolution' => '160x160',
+            'alt_field' => 0,
+            'title_field' => 0,
+            'default_image' => 0,
+            'user_register_form' => FALSE,
+          ),
+          'display' => array(
+            'default' => array(
+              'label' => 'above',
+              'type' => 'image',
+              'settings' => array(
+                'image_style' => '',
+                'image_link' => '',
+              ),
+              'module' => 'image',
+              'weight' => 3,
+            ),
+            'teaser' => array(
+              'type' => 'hidden',
+              'label' => 'above',
+              'settings' => array(),
+              'weight' => 0,
+            ),
+          ),
+          'required' => 1,
+          'description' => '',
+          'field_name' => 'field_app_screenshot',
+          'entity_type' => 'node',
+          'bundle' => 'app',
+          'deleted' => '0',
+        ),
+      ),
+      'field_app_video' => array(
+        0 => array(
+          'label' => 'Video',
+          'widget' => array(
+            'weight' => '0',
+            'type' => 'file_generic',
+            'module' => 'file',
+            'active' => 1,
+            'settings' => array(
+              'progress_indicator' => 'throbber',
+            ),
+          ),
+          'settings' => array(
+            'file_directory' => 'app/video',
+            'file_extensions' => 'swf flv',
+            'max_filesize' => '',
+            'description_field' => 0,
+            'user_register_form' => FALSE,
+          ),
+          'display' => array(
+            'default' => array(
+              'label' => 'above',
+              'type' => 'file_default',
+              'settings' => array(),
+              'module' => 'file',
+              'weight' => 4,
+            ),
+            'teaser' => array(
+              'type' => 'hidden',
+              'label' => 'above',
+              'settings' => array(),
+              'weight' => 0,
+            ),
+          ),
+          'required' => 0,
+          'description' => '',
+          'field_name' => 'field_app_video',
+          'entity_type' => 'node',
+          'bundle' => 'app',
+          'deleted' => '0',
+        ),
+      ),
+      'field_area' => array(
+        0 => array(
+          'label' => 'Area',
+          'widget' => array(
+            'weight' => '2',
+            'type' => 'options_select',
+            'module' => 'options',
+            'active' => 1,
+            'settings' => array(),
+          ),
+          'settings' => array(
+            'user_register_form' => FALSE,
+          ),
+          'display' => array(
+            'default' => array(
+              'label' => 'above',
+              'type' => 'taxonomy_term_reference_link',
+              'settings' => array(),
+              'module' => 'taxonomy',
+              'weight' => 6,
+            ),
+            'teaser' => array(
+              'type' => 'hidden',
+              'label' => 'above',
+              'settings' => array(),
+              'weight' => 0,
+            ),
+          ),
+          'required' => 1,
+          'description' => '',
+          'default_value' => NULL,
+          'field_name' => 'field_area',
+          'entity_type' => 'node',
+          'bundle' => 'app',
+          'deleted' => '0',
+        ),
+      ),
+      'field_uuke_price' => array(
+        0 => array(
+          'label' => 'Price',
+          'widget' => array(
+            'type' => 'number',
+            'weight' => '5',
+            'settings' => array(),
+            'module' => 'number',
+          ),
+          'settings' => array(
+            'min' => '',
+            'max' => '',
+            'prefix' => '',
+            'suffix' => '',
+            'user_register_form' => FALSE,
+          ),
+          'display' => array(
+            'default' => array(
+              'label' => 'above',
+              'type' => 'number_decimal',
+              'settings' => array(
+                'thousand_separator' => ' ',
+                'decimal_separator' => '.',
+                'scale' => 2,
+                'prefix_suffix' => TRUE,
+              ),
+              'module' => 'number',
+              'weight' => 9,
+            ),
+            'teaser' => array(
+              'type' => 'hidden',
+              'label' => 'above',
+              'settings' => array(),
+              'weight' => 0,
+            ),
+          ),
+          'required' => FALSE,
+          'description' => '',
+          'default_value' => NULL,
+          'field_name' => 'field_uuke_price',
+          'entity_type' => 'node',
+          'bundle' => 'app',
+          'deleted' => '0',
+        ),
+      ),
+    ),
+  );
+  //如果没有APP内容类型，则创建，否则不导入
+  foreach ($data['bundles'] as $type => $bundle) {
+      //node_type_set_defaults
+    if(!in_array($type, node_type_get_types())) {
+      node_type_save($bundle);
+      drupal_set_message(t('Content Type : '. $type .' was created.'));
+      watchdog('uuke_alipay:not', 'custom content type : '. $type);
+    }else{
+      drupal_set_message(t('Content Type : '. $type .' was exist.'));
+    }
+  }
+  
+  foreach ($data['fields'] as $field_name => $field) {
+    $ori_field = field_info_field($field_name);
+    if (empty($ori_field)) {
+      $field = field_create_field($field);
+      watchdog('uuke_alipay', 'field:'.$field_name.' was created');
+    }
+  }
+
+  foreach ($data['instances'] as $instances_name => $instances) {
+    foreach ($instances as $key => $instance) {
+      //$instance = field_info_instance('node', 'body', $type->type);
+      $ori_instance = field_info_instance('node', $instances_name, $instance['bundle']);
+      if (empty($ori_instance)) {
+        $instance = field_create_instance($instance);
+        watchdog('uuke_alipay', 'instance:'.$instances_name.' was created');
+      }
+    }
+  }
+  // import Alipay order node_type begin
+  // import Alipay order node_type end
+}
+
+/**
+ * Implements hook_uninstall().
+ */
+function uuke_market_uninstall() {
+	db_query("DELETE FROM {variable} WHERE name LIKE 'uuke_market_%%'");
+}

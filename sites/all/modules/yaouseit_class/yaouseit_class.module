@@ -1,0 +1,7 @@
+<?php
+/**
+ * @file
+ * Code for the yaouseit_class feature.
+ */
+
+include_once 'yaouseit_class.features.inc';
