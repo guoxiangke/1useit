@@ -1,0 +1,241 @@
+<?php
+/**
+ * Implements hook_cron().
+ */
+function 1useit_notifications_cron() {
+  /*
+   *  // Short-running operation example, not using a queue:
+   *  // Delete all expired records since the last cron run.
+   *  $expires = variable_get('mymodule_cron_last_run', REQUEST_TIME);
+   *  db_delete('mymodule_table')
+   *    ->condition('expires', $expires, '>=')
+   *    ->execute();
+   *  variable_set('mymodule_cron_last_run', REQUEST_TIME);
+   *
+   *  // Long-running operation example, leveraging a queue:
+   *  // Fetch feeds from other sites.
+   *  $result = db_query('SELECT * FROM {aggregator_feed} WHERE checked + refresh < :time AND refresh != :never', array(
+   *    ':time' => REQUEST_TIME,
+   *    ':never' => AGGREGATOR_CLEAR_NEVER,
+   *  ));
+   *  $queue = DrupalQueue::get('aggregator_feeds');
+   *  foreach ($result as $feed) {
+   *    $queue->createItem($feed);
+   *  }
+   */
+   /* Your code here */
+   //send email to class.
+   1useit_notifications_class();
+}
+
+/**
+ * Post test message
+ * @see messaging_admin_test_post_form_submit
+ */
+function 1useit_notifications_class() {
+  $notification_class = views_get_view_result('notification_class');
+  foreach ($notification_class as $key => $value) {
+    $node = $value->_field_data['nid']['entity'];
+    if(isset($node->field_notificationed[LANGUAGE_NONE][0]['value']) && $node->field_notificationed[LANGUAGE_NONE][0]['value']) continue;
+    // $nodes[] = $node;
+      // param begin
+      $subject = '1userit上课提醒';
+      $body['header'] = 'Hello admin,';
+      $body['content'] = '您在1userit上预约的课程即将在几点几分开始，请届时登录1userit参加网上课堂。';
+      $body['footer'] = 'This is a test message from 1UseIt. 系统发送，请勿直接回复，如有疑问，请service@1userit.com!';
+      $address = $node->field_student[LANGUAGE_NONE][0]['uid'];
+      // if($address ==3) continue;
+      // dpm($address);
+      //end
+   // Convert body in array of lines
+    $body = array_map('trim', $body);
+    $method = 'mail';
+
+    $message = messaging_message_build(array(
+      'type' => 'test',
+      'subject' =>    $subject,
+      'header' => $body['header'],
+      'content' => $body['content'],
+      'footer' => $body['footer'],
+      'method' => $method,
+      'priority' => 1, // So it won't be queued
+    ));
+    
+    // Destination may be account or plain parameter/s
+    // $address = 'admin';
+    $send_method = messaging_send_method($method);
+    
+    if ($account = user_load($address)) {
+      $vars['!name'] = theme('username', array('account' => $account));
+      $message->set_user($account);
+      if ($dest = $message->get_destinations()) {
+        $destination = reset($dest);
+        drupal_set_message(t('Found address @address for user !name', array('@address' => $destination->format('long')) + $vars));
+        $result = $message->send();
+      }
+      else {
+        drupal_set_message(t('Cannot find a valid address for user !name', $vars), 'error');
+      }
+      
+    } elseif ($destination = $send_method->address_destination($address, TRUE)) {
+      drupal_set_message(t('Sending message to address: @address', array('@address' => $address)));
+      $result = $message->add_destination($destination)->send();
+    }
+    else {
+      drupal_set_message(t('The destination is not a user name nor a valid address.'), 'error');
+    }
+    if (isset($result)) {
+      if ($result) {
+        $node->field_notificationed[LANGUAGE_NONE][0]['value'] = 1;
+        node_save($node);
+        drupal_set_message(t('The message was sent successfully.'));
+      }
+      else {
+        drupal_set_message(t('The message sending failed.'), 'warning');
+      }
+    }
+    // Check some conditions and let the user know
+    if (!$send_method->enabled) {
+      drupal_set_message(t('This sending method is disabled, thus regular messages will be discarded.'), 'warning');
+    }
+  }
+}
+
+
+
+
+/**
+ * Implements hook_mail().
+ */
+function _1useit_notifications_mail($key, &$message, $params) {
+    /*
+   *  $account = $params['account'];
+   *  $context = $params['context'];
+   *  $variables = array(
+   *    '%site_name' => variable_get('site_name', 'Drupal'),
+   *    '%username' => format_username($account),
+   *  );
+   *  if ($context['hook'] == 'taxonomy') {
+   *    $entity = $params['entity'];
+   *    $vocabulary = taxonomy_vocabulary_load($entity->vid);
+   *    $variables += array(
+   *      '%term_name' => $entity->name,
+   *      '%term_description' => $entity->description,
+   *      '%term_id' => $entity->tid,
+   *      '%vocabulary_name' => $vocabulary->name,
+   *      '%vocabulary_description' => $vocabulary->description,
+   *      '%vocabulary_id' => $vocabulary->vid,
+   *    );
+   *  }
+   *
+   *  // Node-based variable translation is only available if we have a node.
+   *  if (isset($params['node'])) {
+   *    $node = $params['node'];
+   *    $variables += array(
+   *      '%uid' => $node->uid,
+   *      '%node_url' => url('node/' . $node->nid, array('absolute' => TRUE)),
+   *      '%node_type' => node_type_get_name($node),
+   *      '%title' => $node->title,
+   *      '%teaser' => $node->teaser,
+   *      '%body' => $node->body,
+   *    );
+   *  }
+   *  $subject = strtr($context['subject'], $variables);
+   *  $body = strtr($context['message'], $variables);
+   *  $message['subject'] .= str_replace(array("\r", "\n"), '', $subject);
+   *  $message['body'][] = drupal_html_to_text($body);
+   */
+   /* Your code here */
+     global $user;
+
+  // Each message is associated with a language, which may or may not be the
+  // current user's selected language, depending on the type of e-mail being
+  // sent. This $options array is used later in the t() calls for subject
+  // and body to ensure the proper translation takes effect.
+  $options = array(
+    'langcode' => $message['language']->language,
+  );
+
+  switch ($key) {
+    // Send a simple message from the contact form.
+    case 'lock_email':
+      $message['subject'] = $params['subject']. ' is locked!';
+      // Note that the message body is an array, not a string.
+      // $message['body'][] = t('@name sent you the following message:', array('@name' => $user->name), $options);
+      // Because this is just user-entered text, we do not need to translate it.
+
+      // Since user-entered text may have unintentional HTML entities in it like
+      // '<' or '>', we need to make sure these entities are properly escaped,
+      // as the body will later be transformed from HTML to text, meaning
+      // that a normal use of '<' will result in truncation of the message.
+      $message['body'][] = check_plain($params['message']);
+      break;
+  }
+}
+
+/**
+ * Condition packages_condition_packagetype
+ */
+  // 1|Draft
+  // 2|Locked
+  // 3|Pending
+  // 4|Approved
+  // 5|Rejected
+  // 6|Completed
+  // 7|Cancelled
+function _rate_pr_action_email($node) {
+   //Provide the the old answer as parameter to unflag?
+   //do something, no return.
+  // drupal_mail($module, $key, $to, $language, $params = array(), $from = NULL, $send = TRUE);
+ if($node->field_pr_status[LANGUAGE_NONE][0]['value'] == '2') {
+    watchdog('value==2', 'message', array(), WATCHDOG_NOTICE, 'link');
+ }
+ //begin
+  
+  $module = 'rate_pr';
+  $key = 'lock_email';
+
+  // Specify 'to' and 'from' addresses.
+  // Specify 'to' and 'from' addresses.
+  $to =  variable_get('camplus_pr_email_notification_addr', 'admin@admin.com');
+  $from = variable_get('site_mail', 'admin@example.com');
+
+  // "params" loads in additional context for email content completion in
+  // hook_mail(). In this case, we want to pass in the values the user entered
+  // into the form, which include the message body in $form_values['message'].
+  $params = array(
+    'subject' => $node->title,
+    'message' => "<p>Hello World</p>",
+    'body' => "<p>Hello World</p>",
+  );
+  // The language of the e-mail. This will one of three values:
+  // * user_preferred_language(): Used for sending mail to a particular website
+  //   user, so that the mail appears in their preferred language.
+  // * global $language: Used when sending a mail back to the user currently
+  //   viewing the site. This will send it in the language they're currently
+  //   using.
+  // * language_default(): Used when sending mail to a pre-existing, 'neutral'
+  //   address, such as the system e-mail address, or when you're unsure of the
+  //   language preferences of the intended recipient.
+  //
+  // Since in our case, we are sending a message to a random e-mail address that
+  // is not necessarily tied to a user account, we will use the site's default
+  // language.
+  $language = language_default();
+
+  // Whether or not to automatically send the mail when drupal_mail() is
+  // called. This defaults to TRUE, and is normally what you want unless you
+  // need to do additional processing before drupal_mail_send() is called.
+  $send = TRUE;
+  // Send the mail, and check for success. Note that this does not guarantee
+  // message delivery; only that there were no PHP-related issues encountered
+  // while sending.
+  $result = drupal_mail($module, $key, $to, $language, $params, $from, $send);
+  if ($result['result'] == TRUE) {
+    drupal_set_message(t('Your lock eamil has been sent.'));
+  }
+  else {
+    drupal_set_message(t('There was a problem sending your message and it was not sent.'), 'error');
+  }
+
+}
