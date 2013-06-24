@@ -41,7 +41,7 @@ function useit_notifications_class() {
       // param begin
       $subject = '1userit上课提醒';
       $body['header'] = 'Hello admin,';
-      $body['content'] = '您在1userit上预约的课程即将在几点几分开始，请届时登录1userit参加网上课堂。';
+      $body['content'] = '您在1userit上预约的英语口语课程即将在'.$node->field_date[LANGUAGE_NONE][0]['value'].'开始，'.$node->field_date[LANGUAGE_NONE][0]['value2'].'结束。请届时登录1userit参加网上课堂。'.l($node->title,'node/'.$node->nid);
       $body['footer'] = 'This is a test message from 1UseIt. 系统发送，请勿直接回复，如有疑问，请service@1userit.com!';
       $address = $node->field_student[LANGUAGE_NONE][0]['uid'];
       // if($address ==3) continue;
@@ -70,33 +70,38 @@ function useit_notifications_class() {
       $message->set_user($account);
       if ($dest = $message->get_destinations()) {
         $destination = reset($dest);
-        drupal_set_message(t('Found address @address for user !name', array('@address' => $destination->format('long')) + $vars));
+        // drupal_set_message(t('Found address @address for user !name', array('@address' => $destination->format('long')) + $vars));
+        watchdog('useit_notifications', t('Found address @address for user !name', array('@address' => $destination->format('long')) + $vars), array(), WATCHDOG_NOTICE, 'link');
         $result = $message->send();
       }
       else {
-        drupal_set_message(t('Cannot find a valid address for user !name', $vars), 'error');
+        watchdog('useit_notifications', t('Cannot find a valid address for user !name', $vars), array(), WATCHDOG_NOTICE, 'link');
+        // drupal_set_message(t('Cannot find a valid address for user !name', $vars), 'error');
       }
       
     } elseif ($destination = $send_method->address_destination($address, TRUE)) {
-      drupal_set_message(t('Sending message to address: @address', array('@address' => $address)));
+      // drupal_set_message(t('Sending message to address: @address', array('@address' => $address)));
+      watchdog('useit_notifications', t('Sending message to address: @address', array('@address' => $address)), array(), WATCHDOG_NOTICE, 'link');
       $result = $message->add_destination($destination)->send();
     }
     else {
-      drupal_set_message(t('The destination is not a user name nor a valid address.'), 'error');
+      // drupal_set_message(t('The destination is not a user name nor a valid address.'), 'error');
     }
     if (isset($result)) {
       if ($result) {
         $node->field_notificationed[LANGUAGE_NONE][0]['value'] = 1;
         node_save($node);
-        drupal_set_message(t('The message was sent successfully.'));
+        watchdog('useit_notifications', t('The message was sent successfully.'), array(), WATCHDOG_NOTICE, 'link');
+        // drupal_set_message(t('The message was sent successfully.'));
       }
       else {
-        drupal_set_message(t('The message sending failed.'), 'warning');
+        // drupal_set_message(t('The message sending failed.'), 'warning');
       }
     }
     // Check some conditions and let the user know
     if (!$send_method->enabled) {
-      drupal_set_message(t('This sending method is disabled, thus regular messages will be discarded.'), 'warning');
+      watchdog('useit_notifications', t('This sending method is disabled, thus regular messages will be discarded.'), array(), WATCHDOG_NOTICE, 'link');
+      // drupal_set_message(t('This sending method is disabled, thus regular messages will be discarded.'), 'warning');
     }
   }
 }
