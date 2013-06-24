@@ -2,7 +2,7 @@
 /**
  * Implements hook_cron().
  */
-function useit_notifications_cron() {
+function 1useit_notifications_cron() {
   /*
    *  // Short-running operation example, not using a queue:
    *  // Delete all expired records since the last cron run.
@@ -25,14 +25,14 @@ function useit_notifications_cron() {
    */
    /* Your code here */
    //send email to class.
-   useit_notifications_class();
+   1useit_notifications_class();
 }
 
 /**
  * Post test message
  * @see messaging_admin_test_post_form_submit
  */
-function useit_notifications_class() {
+function 1useit_notifications_class() {
   $notification_class = views_get_view_result('notification_class');
   foreach ($notification_class as $key => $value) {
     $node = $value->_field_data['nid']['entity'];
