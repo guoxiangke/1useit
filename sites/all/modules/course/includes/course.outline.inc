@@ -79,8 +79,11 @@ function course_outline_overview_form($form, &$form_state) {
   if (!empty($_SESSION['course'][$node->nid]['editing'])) {
     $objects = $_SESSION['course'][$node->nid]['editing'];
   }
-  else {
+  else if (!empty($node->course['objects'])) {
     $objects = $node->course['objects'];
+  }
+  else {
+    $objects = array();
   }
 
   // Sort list of objects we pulled from session or DB by weight for proper
@@ -420,7 +423,7 @@ function course_outline_overview_form_submit(&$form, &$form_state) {
 function course_outline_list($node) {
   global $user;
 
-  $course = course_get_course($node, $user);
+  $course = course_get_course($node, $user, TRUE);
 
   // Iterate over objects.
   $workflow = array();
@@ -532,23 +535,16 @@ function course_outline_show_complete_links($course_node) {
   $report = course_report_load($course_node, $account);
   $txt_out = '';
   if ($report->complete) {
-    $txt_out .= '<p>' . t('Thank you for participating in this activity.') . '</p>';
+    $txt_out .= '<p>' . t('Thank you for participating in this course.') . '</p>';
     $links = array(
       'course' => array(t('Return to course'), "node/$course_node->nid", t('Return to the course to view course details and material.')),
     );
     // Allow modules to add links to the course completion landing page, such as
     // post-course actions.
     drupal_alter('course_outline_completion_links', $links, $course_node, $account);
-    foreach ($links as $link) {
-      $element = array(
-        '#title' => l($link[0], $link[1]),
-        '#description' => $link[2],
-        '#children' => '',
-      );
-      $txt_out .= theme('form_element', array('element' => $element));
-    }
   }
   else {
+    drupal_set_title(t('Remaining requirements'));
     $course = course_get_course($course_node, $account);
     $objects = $course->getObjects();
     $requirements_outstanding = array();
@@ -561,35 +557,43 @@ function course_outline_show_complete_links($course_node) {
 
     $items = array();
     foreach ($requirements_outstanding as $req) {
-      $status_css = $req->complete ? 'complete' : 'incomplete';
-      $status_img = $req->complete ? 'ok' : ($req->required ? 'error' : 'warning');
+      $status_css = $req->isComplete() ? 'complete' : 'incomplete';
+      $status_img = $req->isComplete() ? 'ok' : ($req->getCourseObject()->isRequired() ? 'error' : 'warning');
       $status_optional = ($status_img == 'warning') ? ' (optional)' : '';
-      $grade = $req->graded ? ' - ' . t('Your grade: %grade_result%, Pass grade: %passing_grade%', array(
-          '%grade_result' => $req->grade_result,
-          '%passing_grade' => $req->passing_grade,
+      $options = $req->getCourseObject()->getOptions();
+      $grade = $req->getCourseObject()->isGraded() ? ' - ' . t('Your grade: %grade_result%, Pass grade: %passing_grade%', array(
+          '%grade_result' => $req->getGrade(),
+          '%passing_grade' => $options['passing_grade'],
         )) : '';
       $items[] = array(
         array(
           'data' => theme('image', array('path' => "misc/watchdog-{$status_img}.png", 'width' => '', 'height' => '', 'alt' => $status_css)),
           'width' => 20,
         ),
-        $req->title . $status_optional . $grade,
+        $req->getCourseObject()->getTitle() . $status_optional . $grade,
       );
     }
     $reqs_txt = theme('table', array('header' => NULL, 'rows' => $items));
 
-    $txt_out .= '<p>' . t('You must complete the remaining requirements to proceed.') . '</p>';
-    $txt_out .= $reqs_txt . '<div class="homelink"><p>' . l($course_out_return_array['course_outline_link_text'], $course_out_return_array['course_outline_link']) . '</p></div>';
+    $txt_out .= '<p>' . t('You must complete the remaining requirements to complete this course.') . '</p>';
+    $txt_out .= $reqs_txt;
 
     $links = array(
       'course' => array(t('Return to course'), "node/$course_node->nid/takecourse", t('Return to the course to view course details and material.')),
     );
+
     // Allow modules to alter remaining requirement links on the course
     // completion landing page.
     drupal_alter('course_outline_incomplete_links', $links, $course_node, $account);
-    foreach ($links as $link) {
-      $txt_out .= theme('form_element', array('#description' => $link[2]), l($link[0], $link[1]));
-    }
+  }
+
+  foreach ($links as $link) {
+    $element = array(
+      '#title' => l($link[0], $link[1], array('html' => TRUE)),
+      '#description' => $link[2],
+      '#children' => '',
+    );
+    $txt_out .= theme('form_element', array('element' => $element));
   }
 
   return $txt_out;

@@ -1,0 +1,84 @@
+<?php
+
+/**
+ * Implements hook_menu().
+ */
+function mydblog_menu() {
+  $items['admin/reports/mydblog'] = array(
+    'title' => 'Recent log messages',
+    'description' => 'View events that have recently been logged.',
+    'page callback' => 'mydblog_overview',
+    'access arguments' => array('access site reports'),
+    'weight' => -1,
+    'file' => 'mydblog.admin.inc',
+  );
+  $items['admin/reports/myevent/%'] = array(
+    'title' => 'Details',
+    'page callback' => 'mydblog_event',
+    'page arguments' => array(3),
+    'access arguments' => array('access site reports'),
+    'file' => 'mydblog.admin.inc',
+  );
+
+
+  return $items;
+}
+
+/**
+ * Implements hook_init().
+ */
+function mydblog_init() {
+  if (arg(0) == 'admin' && arg(1) == 'reports') {
+    // Add the CSS for this module
+    drupal_add_css(drupal_get_path('module', 'dblog') . '/dblog.css');
+  }
+}
+
+
+function _mydblog_get_message_types() {
+  $types = array();
+
+  $result = db_query('SELECT DISTINCT(type) FROM {mywatchdog} ORDER BY type');
+  foreach ($result as $object) {
+    $types[] = $object->type;
+  }
+
+  return $types;
+}
+
+/**
+ * Implements hook_watchdog().
+ *
+ * Note some values may be truncated for database column size restrictions.
+ */
+function mydblog_watchdog(array $log_entry) {
+  if( preg_match('/custom/',$log_entry['type']) ){
+  Database::getConnection('default', 'default')->insert('mywatchdog')
+    ->fields(array(
+      'uid' => $log_entry['uid'],
+      'type' => substr($log_entry['type'], 0, 64),
+      'message' => $log_entry['message'],
+      'variables' => serialize($log_entry['variables']),
+      'severity' => $log_entry['severity'],
+      'link' => substr($log_entry['link'], 0, 255),
+      'location' => $log_entry['request_uri'],
+      'referer' => $log_entry['referer'],
+      'hostname' => substr($log_entry['ip'], 0, 128),
+      'timestamp' => $log_entry['timestamp'],
+    ))
+    ->execute();
+  }
+}
+
+
+/**
+ * Implements hook_theme().
+ */
+function mydblog_theme() {
+  return array(
+    'mydblog_message' => array(
+      'variables' => array('event' => NULL, 'link' => FALSE),
+      'file' => 'mydblog.admin.inc',
+    ),
+  );
+}

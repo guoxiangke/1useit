@@ -1,0 +1,10 @@
+name = moodle2_calendar
+description = Provides integration with Moodle v2 calendar
+core = 7.x
+dependencies[] = moodle_connector
+
+; Information added by drupal.org packaging script on 2012-02-01
+version = "7.1"
+project = "drupal"
+datestamp = "1328134560"
+

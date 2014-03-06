@@ -1,0 +1,5 @@
+name = useit_theme
+description = useit_theme
+version = 1.1
+core = 7.x
+package = dev

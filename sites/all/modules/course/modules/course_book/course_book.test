@@ -41,8 +41,8 @@ class CourseObjectBookTestCase extends CourseTestCase {
     $co1->save();
     $this->assertTrue($co1->getInstanceId() > 0, 'book node created on course object save.');
 
-    $bookNode = node_load($co1->getInstanceId());
-    $this->assertTrue($bookNode->type == 'book', 'book node is a book.');
+    // Enroll the user in the course
+    course_enroll($courseNode, $this->book_admin);
 
     // Add some more book pages.
     $bp1 = $this->drupalCreateNode(array(

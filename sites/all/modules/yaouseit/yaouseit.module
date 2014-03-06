@@ -33,13 +33,39 @@ function yaouseit_menu() {
     'access callback' => 'user_is_logged_in',
     'file' => 'yaouseit_course.inc',
   );*/
-   $items['course/classroom'] = array(
+   $items['classroom/%user'] = array(
     'title' => 'Live Classroom',
     'page callback' => 'yaouseit_enter_classroom',
+    'page arguments' => array(1),
     'access callback' => TRUE,
     'expanded' => TRUE,
     'file' => 'yaouseit_classroom.inc',
   );
+ //record video for some contents: node, comment, user ......
+   $items['recordvideo/%user'] = array(
+    'title' => 'Record Video',
+    'page callback' => 'yaouseit_record_video',
+    'page arguments' => array(1, NULL, NULL),
+    'access callback' => TRUE,
+    'expanded' => TRUE,
+    'file' => 'yaouseit_classroom.inc',
+  );
+  $items['recordvideo/%user/node/%node'] = array(
+    'title' => 'Record Video',
+    'page callback' => 'yaouseit_record_video',
+    'page arguments' => array(1, 2, 3),
+    'access callback' => TRUE,
+    'expanded' => TRUE,
+    'file' => 'yaouseit_classroom.inc',
+  );
+  $items['recordvideo/%user/comment/%comment'] = array(
+    'title' => 'Record Video',
+    'page callback' => 'yaouseit_record_video',
+    'page arguments' => array(1, 2, 3),
+    'access callback' => TRUE,
+    'expanded' => TRUE,
+    'file' => 'yaouseit_classroom.inc',
+  ); 
    $items['video'] = array(
     'title' => 'Play Video',
     'page callback' => 'yaouseit_video',
@@ -54,6 +80,27 @@ function yaouseit_menu() {
     'expanded' => TRUE,
     'file' => 'yaouseit_course.inc',
   );
+   $items['yaouseit_user_autocomplete'] = array(
+    'title' => 'User autocomplete',
+    'page callback' => 'yaouseit_user_autocomplete',
+    'access callback' => TRUE,
+    'type' => MENU_CALLBACK,
+    'file' => 'yaouseit_course.inc',
+  );
+   $items['recommend/students'] = array(
+    'title' => 'Recommended students',
+    'page callback' => 'yaouseit_recommend_students',
+    'access callback' => TRUE,
+    'expanded' => TRUE,
+    'file' => 'yaouseit_course.inc',
+  );
+   $items['recommend/videos'] = array(
+    'title' => 'Recommended videos',
+    'page callback' => 'yaouseit_recommend_videos',
+    'access callback' => TRUE,
+    'expanded' => TRUE,
+    'file' => 'yaouseit_course.inc',
+  );
   return $items;
 }
 
@@ -61,13 +108,17 @@ function yaouseit_menu() {
 /** 
  * Implements hook_block_info(). 
  */ 
-function yaouseit_block_info() {//die('gl');
+function yaouseit_block_info() {
 	$blocks['mycalendar'] = array(
 	// info: The name of the block.
 	'info' => t('My Calendar'),
-	'status' => TRUE,
-	'region' => 'sidebar_first',  // Not usually provided.
+	//'status' => TRUE,
+	//'region' => 'sidebar_first',  // Not usually provided.
 	);
+	$blocks['recommend_students'] = array(
+	// info: The name of the block.
+	'info' => t('Recommended students'),
+	);//print_r($blocks);die;
 	return $blocks;
 }
 
@@ -82,10 +133,17 @@ function yaouseit_block_view($delta = '') {
 	$block = array();
 switch ($delta) {
 case 'mycalendar':
+	$block['subject'] = t('My Calendar');
 	require_once("yaouseit_course.inc");
 	return yaouseit_calendar_show('block');
 	break;
+case 'recommend_students':
+	$block['subject'] = t('Recommended students');
+	require_once("yaouseit_course.inc");
+	$block['content'] = yaouseit_recommend_students('block');
+	break;
 }
+	return $block;
 }
 
 function yaouseit_term_compare($a, $b)
@@ -243,6 +301,9 @@ Array
 function yaouseit_cron() {
 	global $user;
 
+	require_once("agency.php");
+	$agency = new agency();
+
 	$date=date('Y-m-d');
 
 	//$hm = intval(date('Hi'));
@@ -257,10 +318,11 @@ function yaouseit_cron() {
 			//break;
 		}
 	}
-	$where1 = 'flag<2 AND ';
+	$where1 = 'flag<2 AND flag>=0 AND ';
 	$max_date = date('Y-m-d', mktime(0,0,0,date("m"),date("d")-1,date("Y")) );	
 	if($max_course_no){
 		$sql="SELECT * FROM {user_refer_course} r WHERE $where1 (date<='$max_date' OR (date='$date' AND r.course_start_time<$max_course_no)) AND realm='student_booking' ORDER BY r.`date`,r.course_start_time,r.t_uid,r.s_uid";
+		//SELECT * FROM user_refer_course r WHERE flag<2 AND flag>=0 AND  (date<='2013-06-27' OR (date='2013-06-28' AND r.course_start_time<15)) AND realm='student_booking' ORDER BY r.`date`,r.course_start_time,r.t_uid,r.s_uid
 	}
 	else{
 		$sql="SELECT * FROM {user_refer_course} r WHERE $where1 date<='".$max_date . "' AND realm='student_booking' ORDER BY r.`date`,r.course_start_time,r.t_uid,r.s_uid";
@@ -268,14 +330,72 @@ function yaouseit_cron() {
 
 	$arr_class =$arr_uids= array();
 	//die($sql);
+	//file_put_contents('/tmp/agency_replay.txt',__FUNCTION__.' line:'.__LINE__.$sql."\n",FILE_APPEND);
 	$result = db_query($sql);
 	while ($record = $result->fetchObject()) {
 		$arr_class[$record->date][$record->course_start_time][$record->t_uid]['s_uids'][] = $record->s_uid;
 		$arr_class[$record->date][$record->course_start_time][$record->t_uid]['course_no'] = $record->course_no;
 		$arr_uids[$record->t_uid]=$record->t_uid;
 		//$arr_course_no[]=$record->course_no;
+		
+		if($record->course_end_time){
+			$res_node = db_query("SELECT nid FROM {node} WHERE nid=$record->course_end_time")->fetchObject();
+			if(!empty($res_node)){
+				$client_info = array (	
+						'room' => "1useit-" . $record->t_uid . "-" . $record->date . "-" . $record->course_start_time,
+						'room_title' => $record->t_uid . " " . $record->date . " " . $record->course_start_time,
+						'key' => tetequ_check_code('',''),
+						'company_code' => "1useit"
+				);//必填
+				//录播回放接口地址
+				$replay_url = 'http://www.tetequ.com/api/agency_replay';
+				//获取直播接入码
+				$json_live_code = $agency->get_live_code ( $client_info ['key'], $client_info ['company_code'] );
+				//得到的是json格式的数据
+				$live_code = json_decode ( $json_live_code );
+				//file_put_contents('/tmp/agency_replay.txt',__FUNCTION__.' line:'.__LINE__." record=".print_r($record,true)." live_code=".print_r($live_code,true)."\n",FILE_APPEND);
+				// $live_code[status]如果是1，2，3，4都是出错，打印错误；如果是5，则正确，返回直播码；
+				if ($live_code->status == 5)
+				{
+					//设置直播码，传送到直播接口	
+					$client_info ['live_code'] = $live_code->live_code;
+					$class_node = new stdClass();
+					$class_node->type = 'class'; //!!!
+					//$class_node->uid = 1;
+					//$class_node->vid = $record->vid;
+					$class_node->nid=$record->course_end_time;
+					$class_node->is_new=0;
+					$class_node->field_video_url[LANGUAGE_NONE][] = Array
+					(
+						'url' => '/video/'.$record->t_uid . "--" . $record->date . "--" . $record->course_start_time,
+						'title' => $record->t_uid . " " . $record->date . " " . $record->course_start_time,
+					);
+					//file_put_contents('/tmp/agency_replay.txt',__FUNCTION__.' line:'.__LINE__." class_node=".print_r($class_node,true)." node_submit\n",FILE_APPEND);
+					//if(1 && $class_node = node_submit($class_node)) {
+						node_save($class_node);
+					//}
+					file_put_contents('/tmp/agency_replay.txt',__FUNCTION__.' line:'.__LINE__." node_save\n",FILE_APPEND);
+
+				}
+			}
+		}
 	}
 	if( empty($arr_class) )return;
+/*
+    [field_video_url] => Array
+        (
+            [und] => Array
+                (
+                    [0] => Array
+                        (
+                            [title] => myvideo
+                            [url] => myvideo/1/2
+                        )
+
+                )
+
+        )
+*/
 	
 	$arr_uids = array_keys($arr_uids);
 	//print_r($arr_class);print_r($arr_uids);die;
@@ -307,7 +427,7 @@ function yaouseit_cron() {
 				  'uid' => $s_uid,
 				  'points' => -1*$points,
 				);
-				if($points)userpoints_userpointsapi($params);
+				//if($points)userpoints_userpointsapi($params);
 			}
 		}
 
@@ -316,14 +436,112 @@ function yaouseit_cron() {
 		$sql="UPDATE {user_refer_course} SET flag=2 WHERE realm='student_booking' "
 				. " AND t_uid='".$t_uid . "' AND date='".$adate . "' AND course_start_time='".$no . "' AND course_no='".$arr_t['course_no']."'" ;
 		//var_dump($sql);
-		$result = db_query($sql);
+		//$result = db_query($sql);
 		
 	}
 	}
 	}
 
+	yaouseit_tmp_table();
 }
 
+
+function yaouseit_tmp_table(){
+/*
+学员列表页面主要显示：姓名，学校/院系，等级等。再加‘关注’按钮。 少数量的推荐一般显示在侧面,主要显示：姓名、等级。再加‘关注’按钮。
+{table1}
+uid username student_level school study_goal gender
+CREATE TABLE IF NOT EXISTS `tmp_users` (
+  `uid` int(10) unsigned NOT NULL DEFAULT '0' COMMENT 'Primary Key: Unique user ID.',
+  `username` varchar(60) NOT NULL DEFAULT '' COMMENT 'Unique user name.',
+  `role_id` int(11) NOT NULL DEFAULT '0',
+  `student_level` int(11) NOT NULL DEFAULT '0',
+  `school` int(11) NOT NULL DEFAULT '0',
+  `study_goal` int(11) NOT NULL DEFAULT '0',
+  `gender` varchar(12) NOT NULL DEFAULT '',
+  PRIMARY KEY (`uid`),
+  UNIQUE KEY `username` (`username`),
+  KEY `role_id` (`role_id`),
+  KEY `student_level` (`student_level`),
+  KEY `school` (`school`),
+  KEY `study_goal` (`study_goal`),
+  KEY `gender` (`gender`)
+) ENGINE=MyIASM DEFAULT CHARSET=utf8 COMMENT='cache user report data.';
+CREATE TABLE IF NOT EXISTS `tmp_users` (
+  `uid` int(10) unsigned NOT NULL DEFAULT '0' COMMENT 'Primary Key: Unique user ID.',
+  `username` varchar(60) NOT NULL DEFAULT '' COMMENT 'Unique user name.',
+  `role_id` int(11) NOT NULL DEFAULT '0',
+  `student_level` int(11) NOT NULL DEFAULT '0',
+  `student_level_name` varchar(32) NOT NULL DEFAULT '',
+  `school` int(11) NOT NULL DEFAULT '0',
+  `school_name` varchar(255) NOT NULL DEFAULT '',
+  `study_goal` int(11) NOT NULL DEFAULT '0',
+  `study_goal_name` varchar(255) NOT NULL DEFAULT '',
+  `gender` varchar(12) NOT NULL DEFAULT '',
+REPLACE INTO tmp_users (uid,username,role_id)
+SELECT u.uid,u.name,r.rid FROM users u JOIN users_roles r ON u.uid=r.uid AND r.rid=5
+
+UPDATE tmp_users tu,profile p,field_data_field_student_level fsl
+ SET tu.student_level=fsl.field_student_level_tid
+ WHERE tu.uid=p.uid AND p.pid=fsl.entity_id AND p.type='sudent_extra_info' AND fsl.deleted=0 AND fsl.entity_type='profile2' AND fsl.bundle='sudent_extra_info'
+SELECT p.uid,field_student_level_tid
+ FROM profile p JOIN field_data_field_student_level fsl ON p.pid=fsl.entity_id AND p.type='sudent_extra_info' AND fsl.deleted=0 AND fsl.entity_type='profile2' AND fsl.bundle='sudent_extra_info'
+
+UPDATE tmp_users tu,profile p,field_data_field_school fs
+ SET tu.school=fs.field_school_tid
+ WHERE tu.uid=p.uid AND p.pid=fs.entity_id AND p.type='student_profile' AND fs.deleted=0 AND  fs.entity_type='profile2' AND fs.bundle='student_profile'
+SELECT p.uid,field_school_tid
+ FROM profile p JOIN field_data_field_school fs ON p.pid=fs.entity_id AND p.type='student_profile' AND fs.deleted=0 AND fs.entity_type='profile2' AND fs.bundle='student_profile'
+
+UPDATE tmp_users tu,profile p,field_data_field_study_goal fsg
+ SET tu.study_goal=fsg.field_study_goal_tid
+ WHERE tu.uid=p.uid AND p.pid=fsg.entity_id AND p.pid=fsg.entity_id AND p.type='student_profile' AND fsg.deleted=0 AND fsg.entity_type='profile2' AND fsg.bundle='student_profile'
+SELECT p.uid,field_study_goal_tid
+ FROM profile p JOIN field_data_field_study_goal fsg ON p.pid=fsg.entity_id AND p.type='student_profile' AND fsg.deleted=0 AND fsg.entity_type='profile2' AND fsg.bundle='student_profile'
+
+UPDATE tmp_users tu,profile p,field_data_field_gender fg
+ SET tu.gender=fg.field_gender_value
+ WHERE tu.uid=p.uid AND p.pid=fg.entity_id AND p.pid=fg.entity_id AND p.type='main' AND fg.deleted=0 AND fg.entity_type='profile2' AND fg.bundle='main'
+SELECT p.uid,field_gender_value
+ FROM profile p JOIN field_data_field_gender fg ON p.pid=fg.entity_id AND p.type='main' AND fg.deleted=0 AND fg.entity_type='profile2' AND fg.bundle='main'
+
+SELECT tu . * , t1.name AS student_level_name, t1.name AS school_name, t1.name AS study_goal_name
+FROM tmp_users tu
+LEFT JOIN taxonomy_term_data t1 ON tu.student_level = t1.tid
+LEFT JOIN taxonomy_term_data t2 ON tu.school = t2.tid
+LEFT JOIN taxonomy_term_data t3 ON tu.study_goal = t3.tid
+WHERE tu.student_level >0
+ORDER BY IF( student_level =14, 0, 1 ),IF(school=92,0,1),IF(study_goal=4051,0,1),student_level,school,study_goal,gender
+
+视频推荐 视频列表页面主要显示：教材，课，老师，学员。 少数量的推荐一般显示在具体某一课、或者某个老师的下面，主要显示：姓名、等级。再加‘关注’按钮。
+{table2}
+class_node_id s_uid lesson_tid? fivestar following_flag video_statics
+{table3}
+uid following_uid1
+uid following_uid2
+*/
+	global $user;
+
+db_query("REPLACE INTO {tmp_users} (uid,username,role_id)
+SELECT u.uid,u.name,r.rid FROM {users} u JOIN {users_roles} r ON u.uid=r.uid AND r.rid=" . variable_get('student_role_id', 5) );
+
+db_query("UPDATE {tmp_users} tu,{profile} p,{field_data_field_student_level} fsl
+ SET tu.student_level=fsl.field_student_level_tid
+ WHERE tu.uid=p.uid AND p.pid=fsl.entity_id AND p.type='sudent_extra_info' AND fsl.deleted=0 AND fsl.entity_type='profile2' AND fsl.bundle='sudent_extra_info'" );
+
+db_query("UPDATE {tmp_users} tu,{profile} p,{field_data_field_school} fs
+ SET tu.school=fs.field_school_tid
+ WHERE tu.uid=p.uid AND p.pid=fs.entity_id AND p.type='student_profile' AND fs.deleted=0 AND  fs.entity_type='profile2' AND fs.bundle='student_profile'" );
+
+db_query("UPDATE {tmp_users} tu,{profile} p,{field_data_field_study_goal} fsg
+ SET tu.study_goal=fsg.field_study_goal_tid
+ WHERE tu.uid=p.uid AND p.pid=fsg.entity_id AND p.pid=fsg.entity_id AND p.type='student_profile' AND fsg.deleted=0 AND fsg.entity_type='profile2' AND fsg.bundle='student_profile'" );
+
+db_query("UPDATE {tmp_users} tu,{profile} p,{field_data_field_gender} fg
+ SET tu.gender=fg.field_gender_value
+ WHERE tu.uid=p.uid AND p.pid=fg.entity_id AND p.pid=fg.entity_id AND p.type='main' AND fg.deleted=0 AND fg.entity_type='profile2' AND fg.bundle='main'" );
+
+}
 /*
 function yaouseit_cron() {
 	global $user;

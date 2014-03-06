@@ -1,0 +1,545 @@
+<?php
+
+/**
+ * @file
+ * Provides integration with Moodle2.
+ */
+
+/**
+ * Implements hook_menu().
+ */
+function moodle2_menu() {
+  $items['admin/config/moodle2'] = array(
+    'title'            => 'Moodle2 Integration settings',
+    'description'      => 'Set Moodle database credentials and other settings.',
+    'page callback'    => 'drupal_get_form',
+    'page arguments'   => array('moodle2_admin_settings'),
+    'access arguments' => array('administer checkout'),
+    'file'             => 'moodle2.admin.inc',
+  );
+
+  return $items;
+}
+
+/** 
+ * Implements hook_user_logout(). 
+ */ 
+function moodle2_user_logout($user) {
+    $drupal_session_name = session_name();
+    $drupal_cookie_params = session_get_cookie_params();
+    session_write_close();
+
+    chdir('moodle'); // /var/www/drupal7/
+    include_once("config4drupal.php");
+    include_once('lib/setup4drupal.php');
+
+    require_logout();
+
+    session_write_close();
+    chdir('..');
+
+    session_name($drupal_session_name);
+    //moodle called it's session_set_cookie_params
+    session_set_cookie_params($drupal_cookie_params['lifetime'], $drupal_cookie_params['path'], $drupal_cookie_params['domain'], $drupal_cookie_params['secure'], $drupal_cookie_params['httponly']);
+    drupal_session_initialize();
+
+    _drupal_session_delete_cookie( session_name() );
+}
+
+
+/** 
+ * Implements hook_user_insert(). 
+ */ 
+function moodle2_user_insert($d_user,$account, $category = NULL) {
+ //file_put_contents('/tmp/setcoookie.txt',__FUNCTION__.' line:'.__LINE__." user=".print_r($d_user,true)." account=".print_r($account,true)."\n",FILE_APPEND);
+ //user=Array... account=stdClass Object...
+
+    //begin guoli
+if(1){
+
+    if(!moodle2_db_connect()){
+      drupal_set_message('', 'Sorry, can not connect to moodle DB.Pls report to site admin,Many thanks!</a>');
+      return;
+     }
+     else{
+      //db_set_active();
+     }
+
+    $drupal_session_name = session_name();
+    $drupal_cookie_params = session_get_cookie_params();
+
+    //session_destroy();
+    session_write_close();
+    //drupal_session_regenerate();
+    //drupal_session_commit();
+
+    chdir('moodle');
+    include_once("config4drupal.php");
+    include_once('lib/setup4drupal.php');
+
+    global $USER; //for moodle to use
+
+    //$authplugin = get_auth_plugin('manual');	//email	$CFG->registerauth);
+
+    $user = new stdClass();
+    $user->password = $account->new_pass;
+    $user->username = $d_user['name'];
+    $arr1 = array_shift($d_user['field_firstname']);
+    $arr2 = array_shift($d_user['field_lastname']);
+    $user->firstname = $arr1[0]['value'];
+    $user->lastname = $arr2[0]['value'];
+    $user->email = $d_user['mail'];
+    $user->country = '';	//HK
+    $user->city = ''; //Hong Kong
+    
+    $user->confirmed   = 1;
+    $user->lang        = current_language();
+    $user->firstaccess = time();
+    $user->timecreated = time();
+    $user->mnethostid  = $CFG->mnet_localhost_id;
+    $user->secret      = random_string(15);
+    $user->auth        = 'manual';	//'email';	//$CFG->registerauth;
+
+    moodle2_user_signup($user, 0);
+
+
+
+    session_write_close();
+    chdir('..');
+
+    //_drupal_bootstrap_database();
+    session_name($drupal_session_name);
+    //drupal_settings_initialize();
+    session_set_cookie_params($drupal_cookie_params['lifetime'], $drupal_cookie_params['path'], $drupal_cookie_params['domain'], $drupal_cookie_params['secure'], $drupal_cookie_params['httponly']); //moodle called it's session_set_cookie_params
+    drupal_session_initialize();
+
+
+    db_set_active();
+
+}
+    //end guoli
+}
+
+
+/**
+ * Sign up a new user ready for confirmation.
+ * Password is passed in plaintext.
+ *
+ * @param object $user new user object
+ * @param boolean $notify print notice with link and terminate
+ */
+function moodle2_user_signup($user, $notify=true) {
+
+	global $CFG, $DB;
+	require_once($CFG->dirroot.'/user/profile/lib.php');
+
+	$user->password = hash_internal_user_password($user->password);
+
+	$user->id = $DB->insert_record('user', $user);
+
+	/// Save any custom profile field information
+	profile_save_data($user);
+
+	$user = $DB->get_record('user', array('id'=>$user->id));
+	events_trigger('user_created', $user);
+
+	//if (! send_confirmation_email($user)) {
+	//print_error('auth_emailnoemail','auth_email');
+	//}
+
+}
+
+
+/*
+user=Array
+(
+    [accounts] => Array
+        (
+            [23] => 23
+        )
+
+    [operation] => cancel
+    [user_cancel_method] => user_cancel_block
+    [user_cancel_confirm] => 0
+    [user_cancel_notify] => 
+    [confirm] => 1
+    [submit] => Cancel accounts
+    [form_build_id] => form-dM5FxbqEAc0DpTTB3a6q4FZ_lmRPi6uVdAsKkEdvjNM
+    [form_token] => slK8ZNC1eRV50BLbXxt5GhUWCy-CrqIun8vS1mfyqew
+    [form_id] => user_multiple_cancel_confirm
+    [op] => Cancel accounts
+)
+ account=stdClass Object
+(
+    [uid] => 23
+    [name] => drupal3
+    [pass] => $S$DgKW3GbDCx2LBCyCZAXUZfcfCLaVLnrFfKszIsFSmVenRq0O0ESr
+    [mail] => drupal3@sina.com
+    [theme] => 
+    [signature] => 
+    [signature_format] => filtered_html
+    [created] => 1367637116
+    [access] => 0
+    [login] => 0
+    [status] => 1
+    [timezone] => Asia/Hong_Kong
+    [language] => 
+    [picture] => 
+    [init] => drupal3@sina.com
+    [data] => 
+    [roles] => Array
+        (
+            [2] => authenticated user
+        )
+
+    [field_firstname] => Array
+        (
+        )
+
+    [field_lastname] => Array
+        (
+        )
+    
+)
+*/
+/** 
+ * Implements hook_user_cancel(). 
+ */ 
+function moodle2_user_cancel($d_user,$account, $category = NULL) {
+ //file_put_contents('/tmp/setcoookie.txt',__FUNCTION__.' line:'.__LINE__." user=".print_r($d_user,true)." account=".print_r($account,true)."\n",FILE_APPEND);
+ //user=Array... account=stdClass Object...
+
+    //begin guoli
+if(1){
+
+    if(!moodle2_db_connect()){
+      drupal_set_message('', 'Sorry, can not connect to moodle DB.Pls report to site admin,Many thanks!');
+      return;
+     }
+
+    $drupal_session_name = session_name();
+    $drupal_cookie_params = session_get_cookie_params();
+
+    //session_destroy();
+    session_write_close();
+    //drupal_session_regenerate();
+    //drupal_session_commit();
+
+    chdir('moodle');
+    include_once("config4drupal.php");
+    include_once('lib/setup4drupal.php');
+
+    global $USER; //for moodle to use
+
+      // Get Moodle user id.
+      $res = db_query("SELECT id,firstname,lastname,email FROM {user} WHERE username = :user_name", array(
+      ':user_name' => $account->name,
+      ))->fetchObject();
+    if(!isset($res->id) || !$res->id ){
+      drupal_set_message('', 'Notice: User '.$account->name.' not in moodle.');
+      db_set_active();
+      return;
+     }
+      $moodle_user_id = $res->id;
+
+    //$authplugin = get_auth_plugin('manual');	//email	$CFG->registerauth);
+
+    $user = new stdClass();
+    $user->id = $moodle_user_id;
+    $user->username = $account->name;
+    $user->email = $account->mail;
+
+    delete_user($user);
+
+
+
+    session_write_close();
+    chdir('..');
+
+    //_drupal_bootstrap_database();
+    session_name($drupal_session_name);
+    //drupal_settings_initialize();
+    session_set_cookie_params($drupal_cookie_params['lifetime'], $drupal_cookie_params['path'], $drupal_cookie_params['domain'], $drupal_cookie_params['secure'], $drupal_cookie_params['httponly']); //moodle called it's session_set_cookie_params
+    drupal_session_initialize();
+
+
+    db_set_active();
+
+}
+    //end guoli
+}
+
+
+/*
+fill classid in student_profile:
+user=Array
+(
+    [profile_student_profile] => Array
+        (
+            [field_classid] => Array
+                (
+                    [und] => Array
+                        (
+                            [0] => Array
+                                (
+                                    [value] => 2A05
+                                )
+
+                        )
+
+                )
+
+        )
+
+    [picture] => 0
+    [original] => stdClass Object
+        (
+            [uid] => 28
+            [name] => drupal6
+            [pass] => $S$D8VmYwpu2uEYhOYGKjCHxNXfbuGmjj/J1DulzlVAo3hRCwgqKdYI
+            [mail] => drupal6@sina.com
+            [theme] => 
+            [signature] => 
+            [signature_format] => filtered_html
+            [created] => 1368404253
+            [access] => 0
+            [login] => 0
+            [status] => 1
+            [timezone] => Asia/Hong_Kong
+            [language] => 
+            [picture] => 
+            [init] => drupal6@sina.com
+            [data] => 
+            [roles] => Array
+                (
+                    [2] => authenticated user
+                )
+
+            [field_firstname] => Array
+                (
+                    [und] => Array
+                        (
+                            [0] => Array
+                                (
+                                    [value] => Li3
+                                    [format] => 
+                                    [safe_value] => Li3
+                                )
+
+                        )
+
+                )
+
+            [field_lastname] => Array
+                (
+                    [und] => Array
+                        (
+                            [0] => Array
+                                (
+                                    [value] => Guo3
+                                    [format] => 
+                                    [safe_value] => Guo3
+                                )
+
+                        )
+
+                )
+      
+)
+*/
+/** 
+ * Implements hook_user_update(). 
+ */ 
+function moodle2_user_update($user,$account) {
+	//file_put_contents('/tmp/setcoookie.txt',__FUNCTION__.' line:'.__LINE__." user=".print_r($user,true)." account=".print_r($account,true)."\n",FILE_APPEND);die;
+$firstname = $lastname = '';
+if( isset($user['field_firstname']) && is_array($user['field_firstname']) ){
+	$arr1 = array_shift($user['field_firstname']);
+	if( isset($arr1) && is_array($arr1) ){
+		$firstname = $arr1[0]['value'];
+	}
+}
+if( isset($user['field_lastname']) && is_array($user['field_lastname']) ){
+	$arr2 = array_shift($user['field_lastname']);
+	if( isset($arr2) && is_array($arr2) ){
+		$lastname = $arr2[0]['value'];
+	}
+}
+
+	if( (isset($account->new_pass) && !empty($account->new_pass)) || (isset($user['name']) && !empty($user['name'])) || (isset($user['mail']) && !empty($user['mail'])) || $firstname || $lastname ){
+
+    if(!moodle2_db_connect()){
+      drupal_set_message('', 'Sorry, can not connect to moodle DB.Pls report to site admin,Many thanks!</a>');
+      return;
+     }
+     else{
+      //file_put_contents('/tmp/setcoookie.txt',__FUNCTION__.' line:'.__LINE__." user=".print_r($user,true)." account=".print_r($account,true)."\n",FILE_APPEND);
+      $arr1 = array();
+      if(isset($user['name']) && !empty($user['name'])) $arr1['username'] = $user['name'];
+      if(isset($user['mail']) && !empty($user['mail'])) $arr1['email'] = $user['mail'];
+      if(isset($firstname) && !empty($firstname)) $arr1['firstname'] = $firstname;
+      if(isset($lastname) && !empty($lastname)) $arr1['lastname'] = $lastname;
+
+      chdir('moodle');
+      include_once("config4drupal.php");
+      chdir('..');
+      if( isset($account->new_pass) && !empty($account->new_pass) ){
+      $password = moodle2_hash_internal_user_password($account->new_pass);
+      $arr1['password'] = $password;
+      db_update('user')
+        ->fields($arr1)
+        ->condition('username', $user['original']->name)
+        ->execute();
+      }
+     else
+      {
+      db_update('user')
+        ->fields($arr1)
+        ->condition('username', $user['original']->name)
+        ->execute();
+      }
+     db_set_active();
+     }
+	}
+
+		$role_assign = false;
+//Course creator id=2		manager id=1
+foreach( $user['roles'] as $roleid => $val){
+	if($val){
+		if( variable_get('teacher_role_id',4)==$roleid || variable_get('course_manager_role_id',6)==$roleid ){
+			$role_assign = true;
+		}
+	}
+}//var_dump($role_assign);die;
+
+$classid = '';
+$profile_student_profile=variable_get('profile_student_profile', 'profile_student_profile');
+if( isset($user[$profile_student_profile]) && is_array($user[$profile_student_profile]) && isset($user[$profile_student_profile]['field_classid']) && is_array($user[$profile_student_profile]['field_classid']) ){
+	$arr3 = array_shift($user[$profile_student_profile]['field_classid']);
+	if( isset($arr3) && is_array($arr3) ){
+		$classid = $arr3[0]['value'];
+	}
+}
+if($classid || $role_assign){
+    if(!moodle2_db_connect()){
+      drupal_set_message('', 'Sorry, can not connect to moodle DB.Pls report to site admin,Many thanks!');
+      return;
+     }
+
+    $drupal_session_name = session_name();
+    $drupal_cookie_params = session_get_cookie_params();
+
+    //session_destroy();
+    session_write_close();
+    //drupal_session_regenerate();
+    //drupal_session_commit();
+
+    chdir('moodle');
+    include_once("config4drupal.php");
+    include_once('lib/setup4drupal.php');
+
+    global $USER; //for moodle to use
+
+      // Get Moodle user id.
+      $res = db_query("SELECT id,firstname,lastname,email FROM {user} WHERE username = :user_name", array(
+      ':user_name' => $account->name,
+      ))->fetchObject();
+    if(!isset($res->id) || !$res->id ){
+      drupal_set_message('', 'Notice: User '.$account->name.' not in moodle.');
+      db_set_active();
+      return;
+     }
+      $moodle_user_id = $res->id;
+
+    //$authplugin = get_auth_plugin('manual');	//email	$CFG->registerauth);
+
+    if($classid){
+    $mdl_user = new stdClass();
+    $mdl_user->id = $moodle_user_id;
+    $mdl_user->profile_field_classid = $classid;
+
+    require_once($CFG->dirroot.'/user/profile/lib.php');
+    profile_save_data($mdl_user);
+    }
+
+		//Course creator id=2		manager id=1
+		if($role_assign){
+		foreach( $user['roles'] as $roleid => $val){
+			$mdl_roleid=0;
+			if(variable_get('teacher_role_id',4)==$roleid)$mdl_roleid=2;
+			if(variable_get('course_manager_role_id',6)==$roleid)$mdl_roleid=1;
+			if(1==$mdl_roleid || 2==$mdl_roleid){
+				//var_dump($mdl_roleid, $moodle_user_id);
+				role_assign($mdl_roleid, $moodle_user_id, 1);
+			}
+		}
+		reload_all_capabilities();
+		//die;	//int(2) string(2) "10" int(1) string(2) "10" 
+		}
+
+
+    session_write_close();
+    chdir('..');
+
+    //_drupal_bootstrap_database();
+    session_name($drupal_session_name);
+    //drupal_settings_initialize();
+    session_set_cookie_params($drupal_cookie_params['lifetime'], $drupal_cookie_params['path'], $drupal_cookie_params['domain'], $drupal_cookie_params['secure'], $drupal_cookie_params['httponly']); //moodle called it's session_set_cookie_params
+    drupal_session_initialize();
+
+
+    db_set_active();
+	}
+}
+
+
+/**
+ * Calculate hashed value from password using current hash mechanism.
+ *
+ * @param string $password
+ * @return string password hash
+ */
+function moodle2_hash_internal_user_password($password) {
+    global $CFG;
+
+    if (isset($CFG->passwordsaltmain)) {
+        return md5($password.$CFG->passwordsaltmain);
+    } else {
+        return md5($password);
+    }
+}
+
+function moodle2_db_connect() {//die(__FUNCTION__);return;
+  $db_type     = variable_get('moodle_connector_db_type');
+  $db_server   = variable_get('moodle_connector_db_server');
+  $db_port     = variable_get('moodle_connector_db_port');
+  $db_username = variable_get('moodle_connector_db_username');
+  $db_password = variable_get('moodle_connector_db_password');
+  $db_database = variable_get('moodle_connector_db_database');
+  $db_prefix   = variable_get('moodle_connector_db_prefix');
+
+  // If settings are incomplete.
+  if (empty($db_type) || empty($db_server) || empty($db_port) ||
+      empty($db_username) || empty($db_password) || empty($db_database)
+      ) {
+
+    return false;
+  }
+
+  $moodle_database = array(
+    'driver'   => $db_type,
+    'host'     => $db_server,
+    'port'     => $db_port,
+    'username' => $db_username,
+    'password' => $db_password,
+    'database' => $db_database,
+    'prefix'   => $db_prefix,
+  );
+//print_r($moodle_database);die();
+  // Connect to the Moodle database.
+  Database::addConnectionInfo('moodle2_database', 'default', $moodle_database);
+  db_set_active('moodle2_database');
+
+  return true;
+}
+

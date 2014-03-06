@@ -1,0 +1,12 @@
+name = Moodle Connector
+description = Provides common functions to integrate Drupal with Moodle.
+package = Other
+configure = admin/config/people/moodle
+core = 7.x
+
+; Information added by drupal.org packaging script on 2012-12-25
+version = "7.x-1.0"
+core = "7.x"
+project = "moodle_connector"
+datestamp = "1356436396"
+

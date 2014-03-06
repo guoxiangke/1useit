@@ -298,8 +298,12 @@ h3 {
   color: #666666;
 }
 
-h1,h2,h3,h4 {
+h1,h2 {
 	text-shadow: 1px 1px 0 #fff, 2px 2px 0 #02b4cf;
+	font-family: 'Microsoft Yahei', STHeiti, sans-serif;
+}
+h3,h4 {
+	text-shadow: 1px 1px 0 #fff, 1px 1px 0 #02b4cf;
 	font-family: 'Microsoft Yahei', STHeiti, sans-serif;
 }
 p {
@@ -325,7 +329,7 @@ var {
  */
 #page {
   margin-top: -92px;
-  margin-top: -132px;
+  /*margin-top: -132px;*/
 }
 
 /**
@@ -333,7 +337,7 @@ var {
  */
 #header {
   height: 95px;
-  height: 135px;
+  /*height: 135px;*/
   color: white;
   text-align: right;
   margin-right: 8px;
@@ -358,7 +362,7 @@ var {
 .header-color-row-two {
   background-color: #2783b9;
   height: 26px;
-  height: 66px;
+  /*height: 66px;*/
   border-top: 1px solid #3d9dd6;
   border-bottom: 1px solid #1e658f;
 }
@@ -4838,6 +4842,11 @@ body.front.logged-in .view-commons-homepage-content .article.node.node-page .lin
 div.view-cource-cat div.views-field-field-deck, div.view-cource-cat div.views-field-name{
 	float: left;
 }
+body.page-english-level div.view-cource-cat div.views-field-field-deck, body.page-english-level div.view-cource-cat div.views-field-name{
+	float: none;
+}
+
+
 div.view-cource-cat{
 	padding-left: 60px;
 }
@@ -4856,4 +4865,13 @@ div.view-display-id-block .views-row {
 padding-bottom: 1px;
 margin-bottom: 1px;
 }
+
+#mycalendar_block h2, #mycalendar_page h2 {
+ font-size:16px;
+}
+
+#mycalendar_block .fc-event-time {
+　display:none;
+}
+
 

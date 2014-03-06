@@ -987,6 +987,8 @@ class CourseObjectFulfillment extends CourseHandler {
    *
    * @param bool $complete
    *   Set to 0 to un-complete, 1 or omit to complete.
+   *
+   * @return CourseObjectFulfillment
    */
   function setComplete($complete = 1) {
     if (!$this->getOption('date_completed')) {
@@ -1000,6 +1002,8 @@ class CourseObjectFulfillment extends CourseHandler {
    * Set this fulfillment's grade.
    *
    * @param float $grade
+   *
+   * @return CourseObjectFulfillment
    */
   function setGrade($grade) {
     return $this->setOption('grade_result', $grade);
@@ -1035,8 +1039,10 @@ class CourseObjectFulfillment extends CourseHandler {
    * Track course after saving fulfillment.
    */
   public function save() {
-    parent::save();
-    $this->getCourseObject()->getCourse()->track();
+    if (course_enrollment_check($this->getCourseObject()->getCourseNid(), $this->getCourseObject()->getCourse()->getUser()->uid)) {
+      parent::save();
+      $this->getCourseObject()->getCourse()->track();
+    }
   }
 
 }
@@ -1226,7 +1232,7 @@ abstract class CourseObjectNode extends CourseObject {
           '%t' => $this->getTitle(),
           '%c' => $this->getComponent(),
           '!l' => l('Access control', "admin/content/node-type/{$this->getComponent()}/access"),
-          ));
+        ));
       }
     }
     return $warnings;
@@ -1310,6 +1316,7 @@ abstract class CourseObjectNode extends CourseObject {
   function thaw($ice) {
     $this->node = $ice->node;
     unset($this->node->nid);
+    unset($this->node->vid);
     node_save($this->node);
     return $this->node->nid;
   }

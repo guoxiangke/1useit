@@ -1,0 +1,7 @@
+<?php
+/**
+ * Implements hook_init().
+ */
+function userit_theme_init() {
+  drupal_add_css(drupal_get_path('module', 'userit_theme') . '/userit_theme.css');
+}

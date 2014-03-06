@@ -1,0 +1,480 @@
+<?php
+
+/**
+ * @file
+ * Provides integration with Moodle2 calendar.
+ */
+
+/**
+ * Implements hook_menu().
+ */
+function moodle2_calendar_menu() {
+  $items['mycalendar'] = array(
+    'title'            => 'My Calendar',
+    'description'      => 'My Calendar',
+    'page callback'    => 'moodle2_calendar_mycalendar',
+    'access arguments' => array('access content'),
+  );
+
+  return $items;
+}
+
+
+function moodle2_calendar_mycalendar(){
+	return moodle2_calendar_show('page');
+}
+
+function moodle2_calendar_show($type){//die(__FUNCTION__);
+	global $user;
+	if(!$user->uid)return '';
+	
+	if('page'==$type)$width = '100%';
+	if('block'==$type)$width = '237px';
+
+$moodle_con = moodle_connector_connect();
+if (!$moodle_con) {
+	return 'Sorry! Cannot connect to moodle DB. Please report to Site Admin. Thanks!';
+}
+else{
+	$res = $moodle_con->query("SELECT id FROM {user} WHERE username = :user_name", array(
+	':user_name' => $user->name,
+	))->fetchObject();
+
+	//$res2 = $moodle_con->query("SELECT DISTINCT(courseid) FROM {user_enrolments} ue JOIN {enrol} e ON ue.enrolid=e.id WHERE userid = :userid", array(':userid' => $res->id));
+	//$res2 = $moodle_con->query("SELECT e.courseid,c.shortname,c.fullname,c.startdate,c.format,e.enrolstartdate,e.enrolenddate, ue.timestart,ue.timeend FROM {user_enrolments} ue JOIN {enrol} e ON ue.enrolid=e.id JOIN {course} c ON e.courseid=c.id WHERE userid = :userid", array(':userid' => $res->id));
+	 /*
+SELECT e.courseid,c.shortname,c.fullname,c.startdate,c.format as course_format,cf.format,cf.value,e.enrolstartdate,e.enrolenddate, ue.timestart,ue.timeend FROM mdl_user_enrolments ue JOIN mdl_enrol e ON ue.enrolid=e.id
+	 JOIN mdl_course c ON e.courseid=c.id JOIN mdl_course_format_options cf ON cf.courseid=c.id AND cf.name='numsections' WHERE userid =
+	 
+	$res2 = $moodle_con->query("SELECT e.courseid,c.shortname,c.fullname,c.startdate,c.format as course_format,cf.format,cf.value,e.enrolstartdate,e.enrolenddate, ue.timestart,ue.timeend FROM {user_enrolments} ue JOIN {enrol} e ON ue.enrolid=e.id
+	 JOIN {course} c ON e.courseid=c.id JOIN {course_format_options} cf ON cf.courseid=c.id AND cf.name='numsections' WHERE userid = :userid", array(':userid' => $res->id));
+	$courseids = array();
+	while ($record = $res2->fetchObject()) {
+		if(!in_array($record->courseid,$courseids)){
+			$courseids[] = $record->courseid;
+			if('weeks'==$record->format)$record->enddate= mktime(date("H",$record->startdate) , date("i",$record->startdate) , 0, date("m",$record->startdate)  , date("d",$record->startdate)+(7*$record->value), date("Y",$record->startdate));;
+		$events[] = "{
+			title: '".$record->fullname."',
+			start: new Date(" . date('Y',$record->startdate) . ", " . date('m',$record->startdate) . ", " . date('d',$record->startdate) . "),"
+			. ( $record->enddate ? "end: new Date(" . date('Y',$record->enddate) . ", " . date('m',$record->enddate) . ", " . date('d',$record->enddate) . ")," : "" ) . 
+			"url: '/moodle/course/view.php?id=".$record->courseid."'
+			}";
+		}
+	}*/
+	$res2 = $moodle_con->query("SELECT DISTINCT(courseid) FROM {user_enrolments} ue JOIN {enrol} e ON ue.enrolid=e.id WHERE userid = :userid", array(':userid' => $res->id));
+	while ($record = $res2->fetchObject()) {
+		$courseids[] = $record->courseid;
+	}
+	if(isset($courseids)){ //db_set_active();return '';}
+/*
+Array
+(
+    [1] => stdClass Object
+        (
+            [id] => 1
+            [cm] => 1
+            [mod] => forum
+            [section] => 0
+            [sectionid] => 2
+            [module] => 9
+            [added] => 1357621241
+            [visible] => 1
+            [visibleold] => 1
+            [name] => News forum
+        )
+
+    [3] => stdClass Object
+        (
+            [id] => 1
+            [cm] => 3
+            [mod] => assign
+            [section] => 1
+            [sectionid] => 3
+            [module] => 1
+            [added] => 1357621782
+            [visible] => 1
+            [visibleold] => 1
+            [name] => test Assignment1
+        )
+
+    [4] => stdClass Object
+        (
+            [id] => 1
+            [cm] => 4
+            [mod] => quiz
+            [section] => 2
+            [sectionid] => 4
+            [module] => 16
+            [added] => 1361508686
+            [visible] => 1
+            [visibleold] => 1
+            [showdescription] => 1
+            [content] => <div class="no-overflow"><p>intro of quiz1</p></div>
+            [name] => quiz1
+        )
+
+)
+*/
+		$events =$events0 = array();
+		$block_events = $block_events2 = $events_b = array();
+		$moodle_url   = variable_get('moodle_connector_url');
+		$today = time();
+		$result = $moodle_con->query("SELECT * FROM {course} WHERE id IN (" .join(',',$courseids). ")" );
+		//print_r($result);die();
+		while ($record = $result->fetchObject()) {
+			$modinfos = unserialize($record->modinfo); if(empty($modinfos)) continue;
+			foreach ($modinfos as $nouseid => $modinfo){
+			unset($old_name); unset($old_content);
+			if('assign'==$modinfo->mod){
+				$arr_assign_cm[$modinfo->id] = $modinfo->cm;
+			}
+			if('quiz'==$modinfo->mod){
+				$res3 = $moodle_con->query("SELECT * FROM {quiz} WHERE id = :id", array( ':id' => $modinfo->id  ))->fetchObject();
+
+			 if($res3->timeopen){
+				$modinfo->startdate= mktime(date("H",$record->startdate) , date("i",$record->startdate) , 0, date("m",$record->startdate)  , date("d",$record->startdate)+7*($modinfo->sectionid-3), date("Y",$record->startdate));
+				if($res3->timeopen)$modinfo->startdate = $res3->timeopen;
+				//if($res3->timeclose)$modinfo->enddate = $res3->timeclose;
+				if(isset($res3->intro) && $res3->intro)$modinfo->content=$res3->intro;
+				if(!isset($modinfo->content)) $modinfo->content='';
+				$old_content = $modinfo->content;
+				$modinfo->content .= t(' (Open Date)');
+				//$diffdays=ceil(abs($today-3600*(0+date('G',$today))-60*(0+date('i',$today))-(0+date('s',$today))-$modinfo->startdate)/60/60/24);
+				$diffdays=abs( 365*( intval(date('Y',$modinfo->startdate))-intval(date('Y',$today)) ) + intval(date('z',$modinfo->startdate))-intval(date('z',$today)));
+				//if(isset($modinfo->enddate))$diffdays2=ceil(abs($today-3600*(0+date('G',$today))-60*(0+date('i',$today))-(0+date('s',$today))-$modinfo->enddate)/60/60/24);
+				$old_name = $modinfo->name;
+				$modinfo->name .= t(' (Open Date)');
+				
+				$events0[] = "{
+				title: '".my_html4js($modinfo->name)."',
+				description: '".(isset($modinfo->content) && $modinfo->content ? my_html4js($modinfo->content) :my_html4js($modinfo->name) )."',
+				start: new Date(" . date('Y',$modinfo->startdate) . ", " . date('m',$modinfo->startdate) . ", " . date('d',$modinfo->startdate) . "),"
+				. ( isset($modinfo->enddate) ? "end: new Date(" . date('Y',$modinfo->enddate) . ", " . date('m',$modinfo->enddate) . ", " . date('d',$modinfo->enddate) . ")," : "" ) . 
+				"url: '$moodle_url/mod/quiz/view.php?id=".$modinfo->cm."'
+				}";
+				$events[] = "{
+				title: '".my_html4js($modinfo->name)."',
+				description: '".(isset($modinfo->content) && $modinfo->content ? my_html4js($modinfo->content) :my_html4js($modinfo->name) )."',
+				start: new Date(y,m,d" . ($modinfo->startdate>$today?"+$diffdays":"-$diffdays") . "," . date('H',$modinfo->startdate) . "," . date('i',$modinfo->startdate) . "),"
+				. ( isset($modinfo->enddate) ? "end: new Date(y,m,d" . ($modinfo->enddate>$today?"+$diffdays2":"-$diffdays2") . ")," : "" ) . 
+				"url: '$moodle_url/mod/quiz/view.php?id=".$modinfo->cm."'
+				}";
+				$key = ($modinfo->startdate>$today?"+$diffdays":"-$diffdays");
+				if(!isset($block_events[$key]))$block_events[$key]=array();
+				array_push($block_events[$key] , my_html4js('<a target=_blank href="' . $moodle_url . '/mod/quiz/view.php?id='.$modinfo->cm .'">' . $modinfo->name . '</a>'));
+				if(!isset($block_events2[$key]))$block_events2[$key]=array();
+				$block_events2[$key]['Y']=date('Y',$modinfo->startdate);
+				$block_events2[$key]['m']=date('m',$modinfo->startdate);
+				$block_events2[$key]['d']=date('d',$modinfo->startdate);
+				$block_events2[$key]['courseid']=$record->id;
+			 }
+			 if($res3->timeclose){
+				$modinfo->startdate= mktime(date("H",$record->startdate) , date("i",$record->startdate) , 0, date("m",$record->startdate)  , date("d",$record->startdate)+7*($modinfo->sectionid-3), date("Y",$record->startdate));
+				if($res3->timeclose)$modinfo->startdate = $res3->timeclose;
+				//if($res3->timeclose)$modinfo->enddate = $res3->timeclose;
+				if(isset($res3->intro) && $res3->intro)$modinfo->content=$res3->intro;
+				if(!isset($modinfo->content)) $modinfo->content='';
+				$modinfo->content = (isset($old_content)?$old_content:$modinfo->content) . t(' (Close Date)');
+				//$diffdays=ceil(abs($today-3600*(0+date('G',$today))-60*(0+date('i',$today))-(0+date('s',$today))-$modinfo->startdate)/60/60/24);
+				$diffdays=abs( 365*( intval(date('Y',$modinfo->startdate))-intval(date('Y',$today)) ) + intval(date('z',$modinfo->startdate))-intval(date('z',$today)));
+				//if(isset($modinfo->enddate))$diffdays2=ceil(abs($today-3600*(0+date('G',$today))-60*(0+date('i',$today))-(0+date('s',$today))-$modinfo->enddate)/60/60/24);
+				$modinfo->name = (isset($old_name)?$old_name:$modinfo->name) . t(' (Close Date)');
+				
+				$events[] = "{
+				title: '".my_html4js($modinfo->name)."',
+				description: '".(isset($modinfo->content) && $modinfo->content ? my_html4js($modinfo->content) :my_html4js($modinfo->name) )."',
+				start: new Date(y,m,d" . ($modinfo->startdate>$today?"+$diffdays":"-$diffdays") . "," . date('H',$modinfo->startdate) . "," . date('i',$modinfo->startdate) . "),"
+				. ( isset($modinfo->enddate) ? "end: new Date(y,m,d" . ($modinfo->enddate>$today?"+$diffdays2":"-$diffdays2") . ")," : "" ) . 
+				"url: '$moodle_url/mod/quiz/view.php?id=".$modinfo->cm."'
+				}";
+				$key = $modinfo->startdate>$today?"+$diffdays":"-$diffdays";
+				if(!isset($block_events[$key]))$block_events[$key]=array();
+				array_push($block_events[$key] , my_html4js('<a target=_blank href="' . $moodle_url . '/mod/quiz/view.php?id='.$modinfo->cm .'">' . $modinfo->name . '</a>'));
+				if(!isset($block_events2[$key]))$block_events2[$key]=array();
+				$block_events2[$key]['Y']=date('Y',$modinfo->startdate);
+				$block_events2[$key]['m']=date('m',$modinfo->startdate);
+				$block_events2[$key]['d']=date('d',$modinfo->startdate);
+				$block_events2[$key]['courseid']=$record->id;
+			 }
+			}
+			}
+		}
+
+		/*/moodle/mod/assign/view.php?id=3
+		/moodle/calendar/view.php?view=day&course=1&cal_d=15&cal_m=1&cal_y=2013#event_2
+		eventtype: user due
+		*/
+		//$result = $moodle_con->query("SELECT id,courseid,instance,userid,name,description,modulename,eventtype,timestart,timeduration,visible FROM {event} WHERE courseid IN (:userid) AND modulename = :modulename", array(':modulename' => 'assign', ':userid' => join(',',$courseids) ));
+		$result = $moodle_con->query("SELECT id,courseid,instance,userid,name,description,modulename,eventtype,timestart,timeduration,visible FROM {event} WHERE courseid IN (" . join(',',$courseids) . ") AND modulename = 'assign'");
+		//$result = $moodle_con->query("SELECT id,course as courseid,name,intro as description,duedate FROM {mdl_assign} WHERE course IN (:userid)", array(':userid' => join(',',$courseids) ));
+		//$records = array();
+		$today = time();
+		while ($record = $result->fetchObject()) {
+			$startDate = $record->timestart;
+			$endDate = $record->timestart+$record->timeduration;
+			//$diffdays=ceil(abs($today-3600*(0+date('G',$today))-60*(0+date('i',$today))-(0+date('s',$today))-$startDate)/60/60/24);
+			$diffdays=abs( 365*( intval(date('Y',$startDate))-intval(date('Y',$today)) ) + intval(date('z',$startDate))-intval(date('z',$today)));
+			//$diffdays2=ceil(abs($today-3600*(0+date('G',$today))-60*(0+date('i',$today))-(0+date('s',$today))-$endDate)/60/60/24);
+			$diffdays2=abs( 365*( intval(date('Y',$endDate))-intval(date('Y',$today)) ) + intval(date('z',$endDate))-intval(date('z',$today)));
+			$events0[] = "{
+				title: '".my_html4js($record->name)."',
+				description: '".(isset($record->description) && $record->description ? my_html4js($record->description) :my_html4js($record->name) )."',
+				start: new Date(" . date('Y',$record->timestart) . ", " . date('m',$record->timestart) . ", " . date('d',$record->timestart) . "),"
+				. ( $record->timeduration ? "end: new Date(" . date('Y',$record->timestart+$record->timeduration) . ", " . date('m',$record->timestart+$record->timeduration) . ", " . date('d',$record->timestart+$record->timeduration) . ")," : "" ) . 
+				"url: '$moodle_url/mod/assign/view.php?id=".$arr_assign_cm[$record->instance]."'
+				}";
+			$events[] = "{
+				title: '".my_html4js($record->name)."',
+				start: new Date(y,m,d" . ($startDate>$today?"+$diffdays":"-$diffdays") . "," . date('H',$record->timestart) . "," . date('i',$record->timestart) . ")," . 
+				//( $record->timeduration ? "end: new Date(y,m,d" . ($endDate>$today?"+$diffdays2":"-$diffdays2") . ")," : "" ) . 
+				"	description: '" . my_html4js($record->description) . "'," .
+				"	url: '$moodle_url/mod/assign/view.php?id=".$arr_assign_cm[$record->instance]."', allDay: false
+				}";
+				$key = ($startDate>$today?"+$diffdays":"-$diffdays");
+				if(!isset($block_events[$key]))$block_events[$key]=array();
+				array_push($block_events[$key], my_html4js('<a target=_blank  href="' . $moodle_url . '/mod/assign/view.php?id='.$arr_assign_cm[$record->instance] .'">' . $record->name . '</a>'));
+				if(!isset($block_events2[$key]))$block_events2[$key]=array();
+				$block_events2[$key]['Y']=date('Y',$record->timestart);
+				$block_events2[$key]['m']=date('m',$record->timestart);
+				$block_events2[$key]['d']=date('d',$record->timestart);
+				$block_events2[$key]['courseid']=$record->courseid;
+		}
+		
+		ksort($block_events);reset ($block_events);
+		//print_r($block_events);die;//print_r($events);
+		$no = 1;
+		foreach($block_events as $key=>$arr1){
+			$events_b[] = "{
+				title: 'No.".$no.'('.count($arr1).")',
+				start: new Date(y,m,d" . "{$key}" . "),"
+				. 
+				"	description: '" . join('<br/>',$arr1) . "'," .
+				"	url: '$moodle_url/calendar/view.php?view=day&cal_d={$block_events2[$key]['d']}&cal_m={$block_events2[$key]['m']}&cal_y={$block_events2[$key]['Y']}', allDay: false
+				}";
+				$no++;
+		}
+		//if(!isset($events)){db_set_active();return '';}
+		if('page'==$type)$events_js = "events: [\n" . join(',',$events) . "],\n";
+		if('block'==$type)$events_js = "events: [\n" . join(',',$events_b) . "],\n";
+	}
+	else{ $events_js = ""; }
+	
+	drupal_add_css('sites/all/libraries/fullcalendar/fullcalendar.css');
+	drupal_add_js('sites/all/libraries/fullcalendar/fullcalendar.min.js');
+	//drupal_add_js(drupal_get_path('module', 'moodle2_calendar') . '/jquery.qtip-1.0.0-rc3.min.js');
+	drupal_add_js('sites/all/libraries/qtip/jquery.qtip-1.0.0-rc3.min.js');
+
+	$s = <<<TT
+<script type='text/javascript'>
+
+	jQuery(document).ready(function() {
+	
+		var date = new Date();
+		var d = date.getDate();
+		var m = date.getMonth();
+		var y = date.getFullYear();
+		
+		jQuery('#calendar').fullCalendar({
+			header: {
+				left: 'today, prev, next',
+				center: 'title',
+				right: 'month,agendaWeek,agendaDay'
+			},
+			editable: false,
+			$events_js
+        viewDisplay: function(view) { 
+         var calendar = jQuery(this);
+         jQuery('.fc-event').each(function(){
+            jQuery(this).attr('target','_blank');
+            // Grab event data
+            var title = jQuery(this).find('.fc-event-title').text(),
+               data = calendar.data('fullCalendar').clientEvents(function(event){
+                  return event.title === title;
+               })[0];
+            var qtipContent = data.description ? data.description : data.title;
+            jQuery(this).qtip({
+               content: qtipContent,
+               position: {
+                  corner: {
+                     target: 'topLeft',
+                     tooltip: 'bottomLeft'
+                  }
+               },
+               show: 'mouseover',
+               hide:  { fixed: true, delay: 1000 },
+               style: {
+                 width: 200,
+                 padding: 5,
+                 background: '#A2D959',
+                 color: 'black',
+                 textAlign: 'center',
+                 border: {
+                    width: 7,
+                    radius: 5,
+                    color: '#A2D959'
+                 },
+                 tip: true
+               }
+            });
+         });
+         return false;
+        }
+
+
+		});
+		
+	});
+
+</script>
+<div id='calendar' _style="width: $width;margin: 0 auto;"></div>
+
+TT;
+
+/*
+		$s1 = <<<TT
+<script type='text/javascript'>
+
+	jQuery(document).ready(function() {
+	
+		var date = new Date();
+		var d = date.getDate();
+		var m = date.getMonth();
+		var y = date.getFullYear();
+		
+		jQuery('#calendar-block').fullCalendar({
+			header: {
+				left: 'prev',
+				center: 'title',
+				right: 'next'
+			},
+			editable: false,
+			$events_js
+			eventRender: function(event, element) {
+			    element.qtip({
+				content: event.description
+			    });
+			}
+
+		});
+		
+	});
+
+</script>
+<div id='calendar-block' style="width: $width;margin: 0 auto;"></div>
+<div align="center" class="view-full">
+	<a href="/mycalendar">View Full Calendar</a>
+</div>
+TT;
+*/
+
+		$s2 = <<<TT
+<script type='text/javascript'>
+
+	jQuery(document).ready(function() {
+	
+		var date = new Date();
+		var d = date.getDate();
+		var m = date.getMonth();
+		var y = date.getFullYear();
+		
+		jQuery('#calendar').fullCalendar({
+			header: {
+				left: 'prev',
+				center: 'title',
+				right: 'next'
+			},
+			editable: false,
+			$events_js
+        viewDisplay: function(view) { 
+         var calendar = jQuery(this);
+         jQuery('.fc-event').each(function(){
+            jQuery(this).attr('target','_blank');
+            // Grab event data
+            var title = jQuery(this).find('.fc-event-title').text(),
+               data = calendar.data('fullCalendar').clientEvents(function(event){
+                  return event.title === title;
+               })[0];
+            var qtipContent = data.description ? data.description : data.title;
+            jQuery(this).qtip({
+               content: qtipContent,
+               position: {
+                  corner: {
+                     target: 'topLeft',
+                     tooltip: 'bottomLeft'
+                  }
+               },
+               show: 'mouseover',
+               hide: { fixed: true, delay: 1000 },
+               style: {
+                 width: 200,
+                 padding: 5,
+                 background: '#A2D959',
+                 color: 'black',
+                 textAlign: 'center',
+                 border: {
+                    width: 7,
+                    radius: 5,
+                    color: '#A2D959'
+                 },
+                 tip: true
+               }
+            });
+         });
+         return false;
+        }
+
+
+		});
+		
+	});
+
+</script>
+<div id='calendar' _style="width: $width;margin: 0 auto;"></div>
+<div align="center" class="view-full">
+	<a href="/mycalendar">View Full Calendar</a>
+</div>
+TT;
+
+      $block['subject'] = t('moodle calendar');
+      $block['content'] = $s2;
+
+	db_set_active();
+
+	if('page'==$type)return $s;
+	if('block'==$type)return $block;
+	}
+}
+
+/** 
+ * Implements hook_block_info(). 
+ */ 
+function moodle2_calendar_block_info() {
+	$blocks['moodle2-calendar'] = array(
+	// info: The name of the block.
+	'info' => t('moodle2 calendar'),
+	'status' => TRUE,
+	'region' => 'sidebar_first',  // Not usually provided.
+	);
+	return $blocks;
+}
+
+/**
+ * Implements hook_block_view().
+ *
+ */
+function moodle2_calendar_block_view($delta = '') {
+	global $user;
+	if(!$user->uid)return;
+
+	$block = array();
+switch ($delta) {
+case 'moodle2-calendar':
+	return moodle2_calendar_show('block');
+	break;
+}
+}
+
+function my_html4js($s){
+	return str_replace(array("'",'"','&',"\\\\","\\n","\\r","\\t","\\b","\\f","\n","\r","\t","\b","\f"), array("\\'",'\\"',"\\&",'\\\\',' ',' ',' ',' ',' ',' ',' ',' ',' ',' '),$s);
+	//return str_replace(array("'",'"','&',"\\\\","\\n","\\r","\\t","\\b","\\f"), array("\\'",'\\"',"\\&",'\\\\',' ',' ',' ',' ',' '),$s);
+}

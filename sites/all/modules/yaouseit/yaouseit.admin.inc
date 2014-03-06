@@ -16,8 +16,8 @@ function yaouseit_admin_settings() {	//yaouseit_cron();return;
   $form['yaouseit_default_class_points'] = array(
     '#type'          => 'textfield',
     '#title'         => '默认的每节课程价格(单位：点数)',
-    '#default_value' => variable_get('yaouseit_default_class_points', 150),
-    '#size'          => 3,
+    '#default_value' => variable_get('yaouseit_default_class_points', 300),
+    '#size'          => 5,
     '#required'      => TRUE,
   );
 
@@ -57,11 +57,35 @@ function yaouseit_admin_settings() {	//yaouseit_cron();return;
     '#required'      => TRUE,
   );
 
+  $form['administrator_role_id'] = array(
+    '#type'          => 'textfield',
+    '#title'         => t('Administrator role ID'),
+    '#default_value' => variable_get('administrator_role_id', 3),
+    '#size'          => 9,
+    '#required'      => TRUE,
+  );
+
+  $form['student_role_id'] = array(
+    '#type'          => 'textfield',
+    '#title'         => t('Student role ID'),
+    '#default_value' => variable_get('student_role_id', 5),
+    '#size'          => 9,
+    '#required'      => TRUE,
+  );
+
   $form['teacher_role_id'] = array(
     '#type'          => 'textfield',
     '#title'         => t('Teacher role ID'),
-    '#default_value' => variable_get('yaouseit_teacher_rid', 6),
-    '#size'          => 2,
+    '#default_value' => variable_get('teacher_role_id', 6),
+    '#size'          => 9,
+    '#required'      => TRUE,
+  );
+
+  $form['aid_teacher_role_id'] = array(
+    '#type'          => 'textfield',
+    '#title'         => t('Aid teacher role ID'),
+    '#default_value' => variable_get('yaouseit_aid_teacher_rid', 7),
+    '#size'          => 9,
     '#required'      => TRUE,
   );
 
@@ -80,18 +104,11 @@ function yaouseit_admin_price_settings(){
 			$sql="SELECT count(*) as n from {user_refer_course} WHERE realm='prices' AND t_uid='".$uid . "' AND course_no='".$tid . "'";
 			$tmp=db_query( $sql )->fetchObject();
 			if($tmp->n <= 0){
-			//updated by milton coz new colun term_no is added	
-			//$sql="REPLACE INTO {user_refer_course} SET realm='prices'"
-			//	. ",s_uid=0,date='{$date}',course_end_time='',t_uid='".$uid . "',course_no='".$tid . "',course_start_time='".$price . "' ";
 			$sql="REPLACE INTO {user_refer_course} SET realm='prices'"
-					. ",s_uid=0,date='{$date}',course_end_time='',t_uid='".$uid . "',term_no=".$tid . ",course_no=".$price . " ";
-						
+				. ",s_uid=0,date='{$date}',course_end_time='',t_uid='".$uid . "',course_no='".$tid . "',course_start_time='".$price . "' ";
 			}
 			else{
-				//updated by milton coz new column term_no is added
-				//$sql="UPDATE {user_refer_course} SET date='{$date}',course_start_time='".$price . "' WHERE realm='prices' AND t_uid='".$uid . "' AND course_no='".$tid . "'";
-				$sql="UPDATE {user_refer_course} SET date='{$date}',course_no=".$price . "  WHERE realm='prices' AND t_uid='".$uid . "' AND term_no=".$tid . "";
-					
+			$sql="UPDATE {user_refer_course} SET date='{$date}',course_start_time='".$price . "' WHERE realm='prices' AND t_uid='".$uid . "' AND course_no='".$tid . "'";
 			}
 			db_query( $sql );//print_r($sql);
 		}
@@ -100,16 +117,14 @@ function yaouseit_admin_price_settings(){
 
 	}
 
-	$default_class_points=variable_get('yaouseit_default_class_points', 150);
+	$default_class_points=variable_get('yaouseit_default_class_points', 300);
 
 	$jiao_cai_course = yaouseit_get_jiao_cai_course();
 		
 	$arr_all_student_booking = array();
 	$result = db_query("SELECT * FROM {user_refer_course} WHERE realm='prices'");
 	while ($record = $result->fetchObject()) {
-		//updated by milton coz new column term_no is added
-		//$arr_all_student_booking[$record->t_uid][$record->course_no] = $record->course_start_time;
-		$arr_all_student_booking[$record->t_uid][$record->term_no] = $record->course_no;
+		$arr_all_student_booking[$record->t_uid][$record->course_no] = $record->course_start_time;
 	}
 
 //teacher_uid -> profile_id

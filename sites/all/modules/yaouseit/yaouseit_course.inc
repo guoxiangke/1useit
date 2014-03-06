@@ -75,8 +75,66 @@ Array
                 (
                     [0] => 28
                 )
+
+
+
+If you just need autocomplete mechanism I would suject you to use jQuery autocomplete plugin - http://docs.jquery.com/Plugins/autocomplete.
+
+you can just output in the template something like that:
+
+print '<input type="text" id="user-autocomplete">';
+Then in javascript code
+
+$(document).ready('function(){
+  $('#user-autocomplete').autocomplete(some-ajax-url-here)
+}');
+you also will need to create an ajax callback page somewhere in your module:
+
+function YOUR_MODULE_NAME_menu(){
+   $items = array();
+   $items['user-autocomplete-ajax-page'] = array(
+     'title' => 'AJAX:get user',
+     'page callback' => 'get_user'
+   );
+}
+function get_user(){
+  $sql = 'SELECT uid, name FROM {users} WHERE name LIKE ("%s")';
+  $result = db_query($sql,$_GET['request']);
+  $res_str = '';
+  while($object = db_fetch_object($result)){
+    $res_str .= $object->name.' ['.$object->uid."]\n";
+  }
+  print $res_str;
+}
+
+
+
+function example_form(){  
+
+$form['Author'] = array( 
+  '#type' => 'textfield', 
+  '#title' => t('Example Textfield'), 
+  '#autocomplete_path' => 'user/autocomplete', 
+);
+
+  return $form;
+ }
+
+require_once(drupal_get_path('module', 'node') . '/node.pages.inc');
+
+print drupal_get_form ('example_form');
+
+
+
+<input type="text" id="edit-field-teacher-und-1-uid" name="field_teacher[und][1][uid]" value="" size="60" maxlength="128" class="form-text form-autocomplete" />
+<input type="hidden" id="edit-field-teacher-und-1-uid-autocomplete" value="http://guob.dev.camplus.hk/user_reference/autocomplete/node/class/field_teacher" disabled="disabled" class="autocomplete" />
+
+
+
 */
 GLOBAL $user;
+
+
   global $base_url, $base_path, $base_root;
 	
 	$date=preg_replace('/course\/booking\//','',$_GET['q']);	//die($date);
@@ -86,7 +144,8 @@ GLOBAL $user;
 	if( isset($_POST['date']) )$date = $_POST['date'];
 	if(!$date || 'states'==$date)$date = date('Y-m-d');	//course/booking/states
 	$diff_time = strtotime($date)-strtotime(date('Y-m-d'));
-	if(strtotime($date) === -1 || $diff_time<0){
+	$diff_month = intval(date('m',strtotime($date))) - intval(date('m'));
+	if(strtotime($date) === -1 || $diff_time<0 || $diff_month>1){
 		return array('#markup' => "意外的错误日期！");
 	}
 
@@ -95,8 +154,60 @@ GLOBAL $user;
 		return array('#markup' => $markup);
 	}
 
+	if( isset($_POST['booking_uid']) && $_POST['booking_uid'] ){
+		$booking_uid = $_POST['booking_uid'];
+	}
+	else{
+		if( 1==$user->uid || in_array(variable_get('administrator_role_id', 5),array_keys($user->roles)) || in_array(variable_get('yaouseit_aid_teacher_rid', 7),array_keys($user->roles)) ) {
+	
+			$js = <<<TT
+<script type='text/javascript'>
+
+/*
+jQuery(document).ready(function(){
+  jQuery('#user-autocomplete').autocomplete({
+	source: '{$base_url}/mycalendar',
+	minLength: 1,
+	  select: function( event, ui ) {
+	  	jQuery( "#booking_uid" ).val( ui.item.id );
+	  }
+  })
+});
+*/
+
+(function ($) {
+
+$(document).ready(function(){
+  $('#user-autocomplete').autocomplete({
+	source: '{$base_url}/yaouseit_user_autocomplete',
+	minLength: 1,
+	  select: function( event, ui ) {
+	  	$( "#booking_uid" ).val( ui.item.id );
+	  }
+  })
+});
+
+})(jQuery);
+
+</script>
+
+TT;
+
+
+			drupal_add_library('system', 'ui.autocomplete');
+	
+			$form2 = '<form action="'.$base_url.'/course/booking" method="post">'."<input type=hidden name=date  value='{$date}'>";
+			$markup = "\n$form2". "\n".'<p>You can book course for others or yourself.<p>Booking user:<input type="text" lengh=20 id="user-autocomplete" name="user-autocomplete">Select while inputing user name<input type="hidden" id="booking_uid" name="booking_uid" value="">'."<br/>\n".
+			$js ."\n<div align=center style='clear:both;' />"
+			."<input style='text-align: center;' type=submit value='提交'></input>"."</form>\n";
+
+			return array('#markup' => $markup);
+		}
+		else $booking_uid=$user->uid;
+	}
+
 	$msg_points = '';
-	$user_points = userpoints_get_current_points($user->uid);
+	$user_points = userpoints_get_current_points($booking_uid);
 	if($user_points<=0){
 		$msg_points = "您没有足够的点数来约课，请点击<a href='/buy-points'>[这里]</a>去购买。";
 		drupal_set_message($msg_points, 'warning');
@@ -105,20 +216,20 @@ GLOBAL $user;
 
 		
 	$arr_all_student_booking = array();
-	$result = db_query("SELECT * FROM {user_refer_course} WHERE date='".$date . "' AND realm='student_booking'");
+	$result = db_query("SELECT * FROM {user_refer_course} WHERE flag>=0 AND date='".$date . "' AND realm='student_booking'");
 	while ($record = $result->fetchObject()) {
 		$arr_all_student_booking[$record->t_uid][$record->course_start_time] = $record->s_uid;
 	}
 
-//teacher_uid -> profile_id
-$arr_teacher_profile_id=array();
-$arr_profile_teacher_id=array();
-$result = db_query("SELECT * FROM {profile} WHERE type='teacher_profile'");
-while ($record = $result->fetchObject()) {
-	$uid=$record->uid;
-	$arr_teacher_profile_id[$uid]=$record->pid;
-	//$arr_profile_teacher_id[$record->pid]=$uid;
-}//print_r($arr_teacher_profile_id);//die;
+	//teacher_uid -> profile_id
+	$arr_teacher_profile_id=array();
+	$arr_profile_teacher_id=array();
+	$result = db_query("SELECT * FROM {profile} WHERE type='teacher_profile'");
+	while ($record = $result->fetchObject()) {
+		$uid=$record->uid;
+		$arr_teacher_profile_id[$uid]=$record->pid;
+		//$arr_profile_teacher_id[$record->pid]=$uid;
+	}//print_r($arr_teacher_profile_id);//die;
 
 	$jiao_cai_course = yaouseit_get_jiao_cai_course();
 	//print_r($jiao_cai_course);die;
@@ -148,42 +259,66 @@ while ($record = $result->fetchObject()) {
 		$arr_sql = array();
 		foreach($arr_xuanke as $uid => $arr_no){
 	
-		$arr_j = array();
-		$result2 = db_query("SELECT * FROM {field_data_field_jiao_cai} WHERE entity_type='profile2' AND bundle='teacher_profile' AND deleted=0 AND entity_id=".$arr_teacher_profile_id[$uid]);
-		while ($record2 = $result2->fetchObject()) {
-			$j = $record2->field_jiao_cai_tid;
-			//$t_uid = $arr_profile_teacher_id[$record2->entity_id];
-			$arr_j[]=$j; //29 32 34 35 36
-		}
+			$arr_no2 = $arr_j = array();
+			$result2 = db_query("SELECT * FROM {field_data_field_jiao_cai} WHERE entity_type='profile2' AND bundle='teacher_profile' AND deleted=0 AND entity_id=".$arr_teacher_profile_id[$uid]);
+			while ($record2 = $result2->fetchObject()) {
+				$j = $record2->field_jiao_cai_tid;
+				//$t_uid = $arr_profile_teacher_id[$record2->entity_id];
+				$arr_j[]=$j; //29 32 34 35 36
+			}
 
-		foreach($arr_no as $no=>$c_tid){
-			if( !isset($arr_all_student_booking[$uid][$no]) || $user->uid==$arr_all_student_booking[$uid][$no] ){
-				//if( isset($arr_student_booking[$uid]) ){
-				//foreach($arr_student_booking[$uid] as $schedule_no=> $tid){	//t_uid=3:1=>430 2=>432 //t_uid=5:3=>462 4=>263
-					//if($no==$schedule_no && $c_tid==$tid){
-						foreach($arr_j as $j){ //86 87 91 92
-							if(!isset($jiao_cai_course[$j]))break;
-							foreach($jiao_cai_course[$j]['courses'] as $jiao_cai_course_tid=> $c_name){
+			foreach($arr_no as $no=>$c_tid){
+				if( !isset($arr_all_student_booking[$uid][$no]) || $booking_uid==$arr_all_student_booking[$uid][$no] ){
+					foreach($arr_j as $j){ //86 87 91 92
+						if(!isset($jiao_cai_course[$j]))break;
+						foreach($jiao_cai_course[$j]['courses'] as $jiao_cai_course_tid=> $c_name){
 							if($jiao_cai_course_tid==$c_tid){
-							$points=variable_get('yaouseit_default_class_points', 150);
-							$points = isset($arr_prices[$uid][$j]) ? $arr_prices[$uid][$j] : $points;
-							$all_points += $points;
-							$msg_points .= $jiao_cai_course[$j]['name'].' 点数:'.$points."<br/>\n";
-							break;
-							}
+								$points=variable_get('yaouseit_default_class_points', 300);
+								$points = isset($arr_prices[$uid][$j]) ? $arr_prices[$uid][$j] : $points;
+								$all_points += $points;
+								$msg_points .= $jiao_cai_course[$j]['name'].' 点数:'.$points."<br/>\n";
+								break;
 							}
 						}
-					//break;
-					//}
-				//}
-				//}
+					}
 
-				$arr_sql[]="DELETE FROM {user_refer_course} WHERE realm='student_booking' AND s_uid='".$user->uid
-				. "' AND t_uid='".$uid . "' AND date='".$date . "' AND course_start_time='".$no . "' AND course_end_time='".$course_end_time."'" ;
-				$arr_sql[]="INSERT INTO {user_refer_course} SET realm='student_booking',s_uid='".$user->uid
-				. "',t_uid='".$uid . "',date='".$date . "',course_no='".$c_tid . "',course_start_time='".$no . "',course_end_time='".$course_end_time."'" ;
+					$sql="SELECT course_end_time,flag FROM {user_refer_course} WHERE flag<2 AND realm='student_booking' AND s_uid='".$booking_uid
+					. "' AND t_uid='".$uid . "' AND date='".$date . "' AND course_start_time='".$no."'";
+					$result3 = db_query($sql);
+					$record3 = $result3->fetchObject();
+					if( isset($record3) && !empty($record3) ){
+						if( isset($record3->course_end_time) && $record3->course_end_time>0 ){
+							//$arr_sql[]="UPDATE {node} set status=1 WHERE nid=".$record3->course_end_time;
+							//$arr_sql[]="UPDATE {node_revision} set status=1 WHERE nid=".$record3->course_end_time;
+							$nodes1[]=$record3->course_end_time;
+							$arr_sql[]="UPDATE {user_refer_course} set flag=1 WHERE realm='student_booking' AND s_uid='".$booking_uid
+							. "' AND t_uid='".$uid . "' AND date='".$date . "' AND course_start_time='".$no."'";
+						}
+					}
+					else{
+						/*$arr_sql[]="DELETE FROM {user_refer_course} WHERE realm='student_booking' AND s_uid='".$booking_uid
+					. "' AND t_uid='".$uid . "' AND date='".$date . "' AND course_start_time=".$no;*/
+						$arr_sql[]="INSERT INTO {user_refer_course} SET realm='student_booking',s_uid='".$booking_uid
+					. "',t_uid='".$uid . "',date='".$date . "',course_no='".$c_tid . "',course_start_time='".$no . "',course_end_time='".$course_end_time."'" ;
+					}
+				}
+				$arr_no2[] = "'$no'";
 			}
-		}
+			//cancel booking
+			$arr_sql[]="UPDATE {user_refer_course} set flag=-1 WHERE realm='student_booking' AND s_uid='".$booking_uid
+						. "' AND t_uid='".$uid . "' AND date='".$date . "' AND course_start_time not in (".join(',',$arr_no2) . ")";
+			/*$arr_sql[]="UPDATE {node} n,{user_refer_course} r set n.status=0 WHERE n.nid=r.course_end_time AND r.realm='student_booking' AND r.s_uid='".$booking_uid
+						. "' AND r.t_uid='".$uid . "' AND r.date='".$date . "' AND r.course_start_time not in (".join(',',$arr_no2) . ")";
+			$arr_sql[]="UPDATE {node_revision} n,{user_refer_course} r set n.status=0 WHERE n.nid=r.course_end_time AND r.realm='student_booking' AND r.s_uid='".$booking_uid
+						. "' AND r.t_uid='".$uid . "' AND r.date='".$date . "' AND r.course_start_time not in (".join(',',$arr_no2) . ")";
+			*/
+			$sql="SELECT course_end_time,flag FROM {user_refer_course} WHERE flag<2 AND realm='student_booking' AND s_uid='".$booking_uid
+			. "' AND t_uid='".$uid . "' AND date='".$date . "' AND course_start_time not in (".join(',',$arr_no2) . ")" . " AND course_end_time>0";
+			$result3 = db_query($sql);
+			$record3 = $result3->fetchObject();
+			if( isset($record3) && !empty($record3) ){
+				$nodes0[]=$record3->course_end_time;
+			}
 		}
 		
 		drupal_set_message("您的点数:$user_points,约课点数:$all_points<br/>\n(".$msg_points.')');
@@ -191,7 +326,19 @@ while ($record = $result->fetchObject()) {
 			$msg_points = "您没有足够的点数来约课，请点击<a href='/buy-points'>[这里]</a>去购买。";
 			drupal_set_message($msg_points, 'warning');
 		}else{
-			foreach( $arr_sql as $sql ){ db_query($sql); }
+			foreach( $arr_sql as $sql ){
+			 //print_r($sql);
+			 db_query($sql);
+			}
+			if( isset($nodes0) || isset($nodes1) ){
+				module_load_include('inc', 'node', 'node.admin');
+				if( isset($nodes0) ){
+					node_mass_update($nodes0, array('status' => 0));
+				}
+				if( isset($nodes1) ){
+					node_mass_update($nodes1, array('status' => 1));
+				}
+			}
 			yaouseit_create_class_nodes();
 		}
 
@@ -237,6 +384,7 @@ $js = <<<TT
 	};
 	
 	jQuery(document).ready(function() {	initLayout();	});
+
 </script>
 
 TT;
@@ -282,7 +430,7 @@ profile2 	teacher_profile 	0 	5 	5 	und 	1 	97
 */
 
 	$arr_student_booking = array();
-	$result = db_query("SELECT * FROM {user_refer_course} WHERE s_uid='".$user->uid . "' AND date='".$date . "' AND realm='student_booking'");
+	$result = db_query("SELECT * FROM {user_refer_course} WHERE flag>=0 AND s_uid='".$booking_uid . "' AND date='".$date . "' AND realm='student_booking'");
 	while ($record = $result->fetchObject()) {
 		$arr_student_booking[$record->t_uid][$record->course_start_time] = $record->course_no;
 	}
@@ -304,7 +452,7 @@ Array
 */
 
 $arr_uids = array();
-$result = db_query("SELECT u.uid FROM {users} u JOIN {users_roles} r ON u.uid=r.uid AND r.rid=" . variable_get('yaouseit_teacher_rid', 6) );
+$result = db_query("SELECT u.uid FROM {users} u JOIN {users_roles} r ON u.uid=r.uid AND r.rid=" . variable_get('teacher_role_id', 6) );
 while ($record = $result->fetchObject()) {
 	$arr_uids[]=$record->uid;
 }
@@ -313,12 +461,12 @@ $arr_prices = yaouseit_get_class_prices($arr_uids);
 
   module_load_include('inc', 'popup', 'includes/popup.api');
 
-$result = db_query("SELECT u.*,r.*,b.field_bio_value,f.uri FROM {users} u JOIN {users_roles} r ON u.uid=r.uid AND r.rid=" . variable_get('yaouseit_teacher_rid', 6) ." LEFT JOIN {field_data_field_bio} b ON  b.entity_type='user' AND b.bundle='user' AND u.uid=b.entity_id LEFT JOIN {field_data_field_video} v ON  v.entity_type='profile2' AND v.bundle='teacher_profile' AND u.uid=v.entity_id LEFT JOIN {file_managed}  f ON v.field_video_fid=f.fid" );
+$result = db_query("SELECT u.*,r.*,b.field_bio_value,f.uri FROM {users} u JOIN {users_roles} r ON u.uid=r.uid AND r.rid=" . variable_get('teacher_role_id', 6) ." LEFT JOIN {field_data_field_bio} b ON  b.entity_type='user' AND b.bundle='user' AND u.uid=b.entity_id LEFT JOIN {field_data_field_video} v ON  v.entity_type='profile2' AND v.bundle='teacher_profile' AND u.uid=v.entity_id LEFT JOIN {file_managed}  f ON v.field_video_fid=f.fid" );
 $allchkboxes = '';
 	$hm = intval(date('Hi'));
-	$h=intval(date('H')-variable_get('yaouseit_booking_no_cancel_time',5));
+	/*$h=intval(date('H')-variable_get('yaouseit_booking_no_cancel_time',5));
 	$h= $h>0 ? $h : 0;
-	$hm2 = intval( $h . date('i') );
+	$hm2 = intval( $h . date('i') );*/
 while ($record = $result->fetchObject()) {
 	//print_r($record);die;
 
@@ -360,6 +508,10 @@ while ($record = $result->fetchObject()) {
 
 	$chkboxes = '';
 	foreach($schedule as $no => $one){	//1 2 ... 28
+		$h5=intval( preg_replace('/\:.*/','',$one[0])-variable_get('yaouseit_booking_no_cancel_time',5));
+		$h5= $h5>0 ? $h5 : 0;
+		$h5 = intval( $h5 . preg_replace('/.*\:/','',$one[0]) );//var_dump($h5);
+
 		if( 0 || $date!=date('Y-m-d') || intval(preg_replace('/[^\d]/','',$one[0])) > $hm ){
 			$checked0=$checked='';
 			if( isset($arr_student_booking[$record->uid]) ){
@@ -380,7 +532,7 @@ while ($record = $result->fetchObject()) {
 			}
 			}
 
-			if( 1 && intval(preg_replace('/[^\d]/','',$one[0])) >= $hm2 ){
+			if( 1 && $date==date('Y-m-d') && $h5 < $hm ){
 				foreach($arr_j as $j){ //86 87 91 92
 					if(!isset($jiao_cai_course[$j]))break;
 					foreach($jiao_cai_course[$j]['courses'] as $c_tid=> $c_name){
@@ -398,7 +550,7 @@ while ($record = $result->fetchObject()) {
 			}
 			if( isset($arr_all_student_booking[$record->uid]) ){
 			foreach($arr_all_student_booking[$record->uid] as $schedule_no=> $s_uid){
-				if($no==$schedule_no && $user->uid != $s_uid){
+				if($no==$schedule_no && $booking_uid != $s_uid){
 					$checked ="disabled";
 					break;
 				}
@@ -410,7 +562,7 @@ while ($record = $result->fetchObject()) {
 				foreach($arr_j as $j){ //86 87 91 92
 					if(!isset($jiao_cai_course[$j]))break;
 					
-					$points=variable_get('yaouseit_default_class_points', 150);
+					$points=variable_get('yaouseit_default_class_points', 300);
 					$points = isset($arr_prices[$record->uid][$j]) ? $arr_prices[$record->uid][$j] : $points;
 					$options .= "<optgroup label=\"".$jiao_cai_course[$j]['name']." 点数:$points\">\n";
 					foreach($jiao_cai_course[$j]['courses'] as $c_tid=> $c_name){
@@ -465,10 +617,10 @@ while ($record = $result->fetchObject()) {
 	$allchkboxes .= "<div style='float:left;'>".$picture."<br /><br />".$popup."<br /><br /><br /><ul>\n$chkboxes\n</ul></div>\n\n";	//<h4 style='text-align: center;'></h4>
 }
 
-	
-	$form2 = '<form action="'.$base_url.'/course/booking" method="post">'."<input type=hidden name=date  value='{$date}'>";
-	$markup = "\n".
-	"\n<h4 align=center>已选择的约课日期：$date</h4><p align=center id='date'></p>\n" . $js ."\n$form2". "\n$allchkboxes\n<div align=center style='clear:both;' />"
+	if( isset($_POST['user-autocomplete']) ) $booking_username=$_POST['user-autocomplete'];
+	else $booking_username=$user->name;
+	$form2 = '<form action="'.$base_url.'/course/booking" method="post">'."<input type=hidden name=date  value='{$date}'>" .'<input type="hidden" id="booking_uid" name="booking_uid" value="'.$booking_uid.'">' .'<input type="hidden" id="user-autocomplete" name="user-autocomplete" value="'.$booking_username.'">';
+	$markup = "<h4 align=center>已选择的约课用户：".$booking_username."</h4>\n<h4 align=center>已选择的约课日期：$date</h4><p align=center id='date'></p>\n" . $js ."\n$form2". "\n$allchkboxes\n<div align=center style='clear:both;' />"
 	.($user->uid<=0 || $user_points<=0 ? '':"<input style='text-align: center;' type=submit value='提交'></input>")."</form>\n";
 
 	$msg = "上课日期、时间、老师、内容由学生自主选择，请按您要选择的老师在上课时间左边打钩并选择上课内容，根据具体的选择费用可能有不同。";
@@ -546,6 +698,7 @@ function yaouseit_create_class_nodes() {
 		$class_node->uid = 1;
 		$class_node->validated=1;
 		$class_node->is_new=1;
+		$class_node->comment=2;
 
 		$students = '';
 		foreach($arr_t['s_uids'] as $s_uid){
@@ -668,8 +821,160 @@ function yaouseit_show_teacher($uid){
         }
 }
 
+function yaouseit_user_autocomplete(){//print_r($_GET);die;
+  $string = $_GET['term'];
+  if ($string) {
+    $result = db_select('users')->fields('users', array('uid','name'))->condition('name', db_like($string) . '%', 'LIKE')->range(0, 10)->execute();
+    foreach ($result as $user) {
+      //$matches[$user->name] = check_plain($user->name);
+      $matches[] = array( 'id'=>$user->uid,'value'=>check_plain($user->name) );
+    }
+  }
 
-function yaouseit_mycalendar(){
+  drupal_json_output($matches);
+}
+
+function yaouseit_recommend_students($type=null){
+	global $user;
+
+/*
+db_query("SELECT tu.*, t1.name as student_level_name, t2.name as school_name, t3.name as study_goal_name
+ FROM tmp_users tu
+ LEFT JOIN taxonomy_term_data t1 ON tu.student_level=t1.tid
+ LEFT JOIN taxonomy_term_data t2 ON tu.school=t2.tid
+ LEFT JOIN taxonomy_term_data t3 ON tu.study_goal=t3.tid
+ WHERE tu.student_level>0 ORDER BY "
+ .( $user->uid>0 ? "IF(student_level={$student_level},0,1),IF(school={$school},0,1),IF(study_goal={$study_goal},0,1)," : "")
+ "student_level,school,study_goal,gender";
+
+$query = db_select('node', 'n')->extend('TableSort');
+$query
+  ->orderBy('uid', 'DESC') // Sort by uid first.
+  ->orderByHeader($header) // Then by what has been selected in the table header
+  ->orderBy('changed', 'DESC') // And at last, by the changed date.
+
+$node_rs = db_select('node', 'n');
+    $node_rs -> join('field_data_field_image', 'i','n.nid = i.entity_id');
+    $node_rs -> join('file_managed', 'f','f.fid = i.field_image_fid');
+    $node_rs -> join('field_data_body', 'b','b.entity_id = n.nid');        
+    $node_rs -> fields('n')
+             -> fields('i')
+             -> fields('f')
+             -> fields('b')                  
+             -> condition('type', 'article')
+             -> condition('field_browser_by_artist_nid', array(1,5,7), 'IN')
+             -> condition('title', '%' . db_like($search_news) . '%', 'LIKE');            
+    $result = $node_rs
+             -> extend('PagerDefault')
+             -> limit(5)
+             -> orderBy('title', $_SESSION['sort_title'])
+             -> orderBy('created', $_SESSION['sort_time'])
+             -> execute();
+*/
+$student_level = 14;
+$school = 92;
+$study_goal = 4051;
+$query = db_select('tmp_users', 'tu')->extend('PagerDefault');
+$query->leftJoin('taxonomy_term_data', 't1','tu.student_level=t1.tid');
+$query->leftJoin('taxonomy_term_data', 't2','tu.school=t2.tid');
+$query->leftJoin('taxonomy_term_data', 't3','tu.study_goal=t3.tid');
+$query->fields('tu');
+$query->addField('t1', 'name', 'student_level_name');
+$query->addField('t2','name', 'school_name');
+$query->addField('t3','name', 'study_goal_name');
+if( 'block'!=$type ) {
+	$query->limit(2);
+}
+else{
+	$query->limit(4);
+}
+
+//$query->extend('TableSort');
+if( $user->uid>0 ){
+$query->orderBy("IF(student_level={$student_level},0,1)", 'ASC');
+$query->orderBy("IF(school={$school},0,1)", 'ASC');
+$query->orderBy("IF(study_goal={$study_goal},0,1)", 'ASC');
+}
+$query->orderBy('student_level', 'ASC');
+$query->orderBy('school', 'ASC');
+$query->orderBy('study_goal', 'ASC');
+$query->orderBy('gender', 'ASC');
+$result = $query->execute();
+//print_r($result->fetchAll());die;
+  $rows = array();
+
+  $header = array(
+    '', // Icon column.
+    array('data' => t('Username'), 'field' => 'tu.username'),
+    array('data' => t('Student level'), 'field' => 't1.student_level_name'),
+    array('data' => t('School'), 'field' => 't2.school_name'),
+    array('data' => t('Study goal'), 'field' => 't3.study_goal_name'),
+    array('data' => t('Operations')),
+  );
+  if( 'block'!=$type ) {
+	  $header = array(
+		t('Username'),
+		t('Student level'),
+		t('School'),
+		t('Study goal'),
+		t('Operations'),
+	  );
+  }
+  else{
+	  $header = array(
+		t('Username'),
+		t('Student level'),
+		t('Operations'),
+	  );
+  }
+
+  foreach ($result as $dblog) {
+  if( 'block'!=$type ) {
+    $rows[] = array('data' =>
+      array(
+        theme('username', array('account' => $dblog)),
+        $dblog->student_level_name,
+        $dblog->school_name,
+        $dblog->study_goal_name,
+        flag_create_link('commons_follow_user', $dblog->uid),
+      ),
+      // Attributes for tr
+      //'class' => array(drupal_html_class('dblog-' . $dblog->type), $classes[$dblog->severity]),
+    );
+  }
+  else{
+    $rows[] = array('data' =>
+      array(
+        theme('username', array('account' => $dblog)),
+        $dblog->student_level_name,
+        flag_create_link('commons_follow_user', $dblog->uid)
+      ),
+      // Attributes for tr
+      //'class' => array(drupal_html_class('dblog-' . $dblog->type), $classes[$dblog->severity]),
+    );
+  }
+  }
+
+  $build['students_table'] = array(
+    '#theme' => 'table',
+    '#header' => $header,
+    '#rows' => $rows,
+    '#attributes' => array('id' => 'tuijian-students'),
+    '#empty' => t('No records available.'),
+  );
+  if( 'block'!=$type ) 
+  	$build['students_pager'] = array('#theme' => 'pager');
+
+  return $build;
+}
+
+function yaouseit_recommend_videos(){
+	global $user;
+
+	return yaouseit_recommend_students();
+}
+
+function yaouseit_mycalendar(){	//return yaouseit_tmp_table();return;//yaouseit_user_autocomplete();die;
 	return yaouseit_calendar_show('page');
 }
 
@@ -694,7 +999,7 @@ function yaouseit_calendar_show($type){
 		$block_events = $block_events2 = $events_b = array();
 		$today = time();
 
-		$result = db_query("SELECT * FROM {user_refer_course} r WHERE (r.s_uid=" . $user->uid . " OR r.t_uid=" . $user->uid . ") AND realm='student_booking' ORDER BY r.`date`,r.course_start_time");
+		$result = db_query("SELECT * FROM {user_refer_course} r WHERE flag>=0 AND (r.s_uid=" . $user->uid . " OR r.t_uid=" . $user->uid . ") AND realm='student_booking' ORDER BY r.`date`,r.course_start_time");
 		$arr_class =$arr_uids= array();
 		while ($record = $result->fetchObject()) {
 			$arr_class[$record->date][$record->course_start_time][$record->t_uid]['s_uids'][] = $record->s_uid;
@@ -725,7 +1030,7 @@ function yaouseit_calendar_show($type){
 			$arr_s_user[$record->uid]=$record;
 		}
 		
-		$result = db_query("SELECT * FROM {user_refer_course} r WHERE (r.s_uid=" . $user->uid . " OR r.t_uid=" . $user->uid . ") AND realm='student_booking' ORDER BY r.`date`,r.course_start_time");
+		$result = db_query("SELECT * FROM {user_refer_course} r WHERE flag>=0 AND (r.s_uid=" . $user->uid . " OR r.t_uid=" . $user->uid . ") AND realm='student_booking' ORDER BY r.`date`,r.course_start_time");
 		while ($record = $result->fetchObject()) {//print_r($record);die;
 
 			$students = '';
@@ -734,23 +1039,24 @@ function yaouseit_calendar_show($type){
 			}*/
 			$students = $arr_s_user[$record->s_uid]->name.' ';
 
-			$title = $block_title = '';
+			$title = $block_title = $class_time = '';
 			$no = $record->course_start_time;
 			foreach($jiao_cai_course as $j => $arr){ //86 87 91 92
 				foreach($arr['courses'] as $c_tid=> $c_name){
 					if($c_tid==$record->course_no){
 						$title = $students .t('has booked').' '.$arr_user[$record->t_uid]->name.t("'s").' '.t('class').":$record->date ".$schedule[$no][0].' '. $arr['name'].' '.$c_name;
+						$class_time=' '.$schedule[$no][0];
 						break;
 					}
 				}
 			}
 
-			$startDate = strtotime($record->date);
+			$startDate = strtotime($record->date.$class_time);
 			$diffdays=abs( 365*( intval(date('Y',$startDate))-intval(date('Y',$today)) ) + intval(date('z',$startDate))-intval(date('z',$today)));
 			$events[] = "{
 				title: '".my_html4js($title.' '.$record->course_start_time)."',
 				start: new Date(y,m,d" . ($startDate>$today?"+$diffdays":"-$diffdays") . "," . date('H',$startDate) . "," . date('i',$startDate) . ")," . 
-				"	description: '" . my_html4js($record->s_uid.' '.$record->t_uid) . "'," .
+				"	description: ''," .
 				"	url: '/node/".$record->course_end_time."', allDay: false
 				}";
 				$key = ($startDate>$today?"+$diffdays":"-$diffdays");
@@ -794,7 +1100,7 @@ function yaouseit_calendar_show($type){
 		var m = date.getMonth();
 		var y = date.getFullYear();
 		
-		jQuery('#calendar').fullCalendar({
+		jQuery('#mycalendar_{$type}').fullCalendar({
 			header: {
 				left: 'today, prev, next',
 				center: 'title',
@@ -846,11 +1152,16 @@ function yaouseit_calendar_show($type){
 	});
 
 </script>
-<div id='calendar' _style="width: $width;margin: 0 auto;"></div>
+<div id='mycalendar_{$type}' _style="width: $width;margin: 0 auto;"></div>
 
 TT;
 
 
+		$css2 = <<<TT
+#mycalendar_block h2, #mycalendar_page h2 {
+ font-size:16px;
+}
+TT;
 
 		$s2 = <<<TT
 <script type='text/javascript'>
@@ -910,6 +1221,10 @@ TT;
 
 
 		});
+
+jQuery("#mycalendar_{$type} > div.fc-content").eq(1).css("display","none");
+jQuery("#mycalendar_{$type} > table.fc-header").eq(1).css("display","none");
+jQuery("#mycalendar_{$type} .fc-event-time").text("");
 		
 	});
 
@@ -925,7 +1240,10 @@ TT;
 
 
 	if('page'==$type)return $s;
-	if('block'==$type)return $block;
+	if('block'==$type){
+		drupal_add_css($css2,$option['type'] = 'inline');
+		return $block;
+	}
 }
 
 function my_html4js($s){

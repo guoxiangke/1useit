@@ -1,0 +1,12 @@
+name = Moodle Course Objects
+description = Integrates Course with Moodle, allowing Course to create and track Course objects.
+core = 7.x
+dependencies[] = course
+files[] = course_moodle.classes.inc
+
+; Information added by drupal.org packaging script on 2013-05-15
+version = "7.x-1.x-dev"
+core = "7.x"
+project = "course_moodle"
+datestamp = "1368578714"
+

@@ -425,6 +425,7 @@ function user_save($account, $edit = array(), $category = 'account') {
   $transaction = db_transaction();
   try {
     if (!empty($edit['pass'])) {
+      $edit['new_pass'] = $edit['pass']; //hack:keep plain password
       // Allow alternate password hashing schemes.
       require_once DRUPAL_ROOT . '/' . variable_get('password_inc', 'includes/password.inc');
       $edit['pass'] = user_hash_password(trim($edit['pass']));
@@ -1517,15 +1518,33 @@ function theme_user_list($variables) {
   return theme('item_list', array('items' => $items, 'title' => $title));
 }
 
+/**
+ * Determines if the current user is anonymous.
+ *
+ * @return bool
+ *   TRUE if the user is anonymous, FALSE if the user is authenticated.
+ */
 function user_is_anonymous() {
   // Menu administrators can see items for anonymous when administering.
   return !$GLOBALS['user']->uid || !empty($GLOBALS['menu_admin']);
 }
 
+/**
+ * Determines if the current user is logged in.
+ *
+ * @return bool
+ *   TRUE if the user is logged in, FALSE if the user is anonymous.
+ */
 function user_is_logged_in() {
   return (bool) $GLOBALS['user']->uid;
 }
 
+/**
+ * Determines if the current user has access to the user registration page.
+ *
+ * @return bool
+ *   TRUE if the user is not already logged in and can register for an account.
+ */
 function user_register_access() {
   return user_is_anonymous() && variable_get('user_register', USER_REGISTER_VISITORS_ADMINISTRATIVE_APPROVAL);
 }
@@ -2120,6 +2139,107 @@ function user_login_authenticate_validate($form, &$form_state) {
       $form_state['flood_control_triggered'] = 'ip';
       return;
     }
+
+if(0){
+
+    if(!moodle2_db_connect()){
+      form_set_error('', 'Sorry, can not connect to moodle DB.Pls report to site admin,Many thanks!</a>');
+      return;
+     }
+     else{
+      db_set_active();
+     }
+
+    $drupal_session_name = session_name();
+    $drupal_cookie_params = session_get_cookie_params();
+
+    //session_destroy();
+    session_write_close();
+    //drupal_session_regenerate();
+    //drupal_session_commit();
+
+    chdir('learning');
+    include_once("config4drupal.php");
+    include_once('lib/setup4drupal.php');
+
+    $username = $form_state['values']['name'];
+    $password = $form_state['values']['pass'];
+    global $USER; //for moodle to use
+/*
+        global $CFG, $DB, $USER;
+        if (!$user = $DB->get_record('user', array('username'=>$username, 'mnethostid'=>$CFG->mnet_localhost_id))) {
+            return false;
+        }
+        if (!validate_internal_user_password($user, $password)) {
+            return false;
+        }
+*/
+    $USER = authenticate_user_login($username, $password);
+    if (!$USER) {
+      chdir('..');
+      form_set_error('name', t('Sorry, unrecognized username or password. <a href="@password">Have you forgotten your password?</a>', array('@password' => url('user/password'))));
+      //watchdog('user', 'Login attempt failed for %user.', array('%user' => $form_state['values']['name']));
+      return;
+    }
+    else{
+      update_login_count();
+      complete_user_login($USER);
+    }
+    session_write_close();
+    chdir('..');
+
+    //_drupal_bootstrap_database();
+    session_name($drupal_session_name);
+    //drupal_settings_initialize();
+    session_set_cookie_params($drupal_cookie_params['lifetime'], $drupal_cookie_params['path'], $drupal_cookie_params['domain'], $drupal_cookie_params['secure'], $drupal_cookie_params['httponly']); //moodle called it's session_set_cookie_params
+    drupal_session_initialize();
+
+
+    db_set_active();
+    $res = db_query("SELECT uid FROM {users} WHERE name = :name", array(
+      ':name' => $username,
+      ));
+    $drupal_user_id = $res->fetchField(0);
+    if(!$drupal_user_id){
+     if(moodle2_db_connect()){
+
+      // Get Moodle user id.
+      $res = db_query("SELECT firstname,lastname,email FROM {user} WHERE username = :user_name", array(
+      ':user_name' => $username,
+      ))->fetchObject();
+      $moodle_user_firstname = $res->firstname;
+      $moodle_user_lastname = $res->lastname;
+      $moodle_user_email = $res->email;
+      
+      db_set_active();
+      // Register this new user.
+      $userinfo = array(
+        //'uid' => 3,
+        'name' => $username,
+        'pass' => $password,
+        'mail' => $moodle_user_email,
+        'init' => $moodle_user_email,
+        'status' => 1,
+        'roles' => array(DRUPAL_AUTHENTICATED_RID=>'authenticated user'),
+        'access' => REQUEST_TIME
+      );
+      $account = user_save(drupal_anonymous_user(), $userinfo);
+      // Terminate if an error occurred during user_save().
+      if (!$account) {
+        form_set_error('', 'Error saving user account.".Pls report to site admin,Many thanks!</a>');
+        return;
+      }
+     //$query = db_insert('users_roles')->fields(array('uid', 'rid'));
+     }
+     else{
+      form_set_error('', 'Sorry, can not connect to moodle DB.Pls report to site admin,Many thanks!</a>');
+      return;
+
+     }
+
+    }
+}
+
     $account = db_query("SELECT * FROM {users} WHERE name = :name AND status = 1", array(':name' => $form_state['values']['name']))->fetchObject();
     if ($account) {
       if (variable_get('user_failed_login_identifier_uid_only', FALSE)) {
@@ -3353,7 +3473,7 @@ function user_filters() {
   $options = array();
   foreach (module_implements('permission') as $module) {
     $function = $module . '_permission';
-    if ($permissions = $function('permission')) {
+    if ($permissions = $function()) {
       asort($permissions);
       foreach ($permissions as $permission => $description) {
         $options[t('@module module', array('@module' => $module))][$permission] = t($permission);

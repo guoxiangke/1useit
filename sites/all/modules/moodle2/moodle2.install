@@ -1,0 +1,13 @@
+<?php
+
+/**
+ * @file
+ * Install and uninstall code for Moodle v2 Integration.
+ */
+
+/**
+ * Implements hook_uninstall().
+ */
+function moodle2_uninstall() {
+  variable_del('moodle2_path');
+}

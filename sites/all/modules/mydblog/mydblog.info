@@ -1,0 +1,11 @@
+name = My Database logging
+description = Logs and records custom events to the database.
+package = custom
+core = 7.x
+files[] = mydblog.module
+
+; Information added by drupal.org packaging script on 2013-03-07
+version = "7.x-1.0"
+project = "yaouseit"
+datestamp = "1362616996"
+

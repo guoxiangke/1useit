@@ -24,3 +24,34 @@ body.front.not-logged-in #block-system-main .pane-2 {
   float: right;
   width: 40%;
 }
+
+/*
+Fix the ANONYMOUS front page only displaying 2 columns
+*/
+
+.two-33-66 > .region-two-33-66-first, .two-66-33 > .region-two-66-33-second, .three-3x33 > .region, .five-5x20 > .panel-row > .region, .three-inset-right > .inset-wrapper > div.region-three-inset-right-inset, .three-inset-left > .inset-wrapper > div.region-three-inset-left-inset {
+width: 30%;
+}
+
+/*
+Fix the LOGGED IN front page only displaying 2 columns
+*/
+
+.two-33-66 > .region-two-33-66-second, .two-66-33 > .region-two-66-33-first, .three-inset-right > .inset-wrapper > div.region-three-inset-right-middle, .three-inset-left > .inset-wrapper > div.region-three-inset-left-middle {
+width: 65%;
+}
+
+/*
+Fix the white boxes in Content Display
+*/
+
+.commons-pod, .page-user .pane-views-panes .block-inner, .commons-pod-comments .comment-wrapper, .front.not-logged-in .pane-views-panes > div, .front.not-logged-in .pane-views > div, .front.not-logged-in body.page-node .pane-views-panes > div, .page-events .view-commons-events-upcoming .view-content, .pane-commons-bw-group > .block-inner, .view-display-id-commons_events_upcoming_page .views-row article, .view-commons-groups-directory > .view-content > .views-row > .node-teaser, .view-commons-groups-directory > .view-content > .views-row form, .view-commons-groups-directory > .view-filters > .node-teaser, .view-commons-groups-directory > .view-filters form, .view-commons-homepage-content .node-teaser.node-group > .view-content > .views-row > .node-teaser, .view-commons-homepage-content .node-teaser.node-group > .view-content > .views-row form, .view-commons-homepage-content .node-teaser.node-group > .view-filters > .node-teaser, .view-commons-homepage-content .node-teaser.node-group > .view-filters form, body.front.logged-in #views-exposed-form-commons-homepage-content-panel-pane-1 .views-exposed-widgets.widgets-active, .page-events .region-three-25-50-25-third .pane-views-panes .block-inner, .pane-search-result .block-content .search-results, .page-search-user .user-results {
+padding: 14px;
+}
+
+/*
+Fix Contributors display on What's Going On? page
+*/
+.views-view-grid td {
+padding: 3px;
+}
